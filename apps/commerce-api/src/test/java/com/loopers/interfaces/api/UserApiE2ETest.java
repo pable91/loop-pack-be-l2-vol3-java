@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -38,5 +39,211 @@ class UserApiE2ETest {
                 .contentType(APPLICATION_JSON)
                 .content(json))
             .andExpect(status().isOk());
+    }
+
+    @DisplayName("회원가입 API 실패 테스트")
+    @Nested
+    class UserSignupFailureTest {
+
+        @Test
+        @DisplayName("이메일 형식이 잘못되면 400 Bad Request를 반환한다")
+        void userSignupApiEmailInvalidTest() throws Exception {
+            UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
+                "kim",
+                "pw111",
+                LocalDate.of(1991, 12, 3),
+                "김용권",
+                "invalid-email"
+            );
+
+            String json = objectMapper.writeValueAsString(requestBody);
+
+            mockMvc.perform(post("/users")
+                    .contentType(APPLICATION_JSON)
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("이메일이 null이면 400 Bad Request를 반환한다")
+        void userSignupApiEmailNullTest() throws Exception {
+            UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
+                "kim",
+                "pw111",
+                LocalDate.of(1991, 12, 3),
+                "김용권",
+                null
+            );
+
+            String json = objectMapper.writeValueAsString(requestBody);
+
+            mockMvc.perform(post("/users")
+                    .contentType(APPLICATION_JSON)
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("이름이 null이면 400 Bad Request를 반환한다")
+        void userSignupApiNameNullTest() throws Exception {
+            UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
+                "kim",
+                "pw111",
+                LocalDate.of(1991, 12, 3),
+                null,
+                "yk@google.com"
+            );
+
+            String json = objectMapper.writeValueAsString(requestBody);
+
+            mockMvc.perform(post("/users")
+                    .contentType(APPLICATION_JSON)
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("이름이 빈 문자열이면 400 Bad Request를 반환한다")
+        void userSignupApiNameEmptyTest() throws Exception {
+            UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
+                "kim",
+                "pw111",
+                LocalDate.of(1991, 12, 3),
+                "",
+                "yk@google.com"
+            );
+
+            String json = objectMapper.writeValueAsString(requestBody);
+
+            mockMvc.perform(post("/users")
+                    .contentType(APPLICATION_JSON)
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("이름이 1자이면 400 Bad Request를 반환한다")
+        void userSignupApiNameTooShortTest() throws Exception {
+            UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
+                "kim",
+                "pw111",
+                LocalDate.of(1991, 12, 3),
+                "김",
+                "yk@google.com"
+            );
+
+            String json = objectMapper.writeValueAsString(requestBody);
+
+            mockMvc.perform(post("/users")
+                    .contentType(APPLICATION_JSON)
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("이름이 11자 이상이면 400 Bad Request를 반환한다")
+        void userSignupApiNameTooLongTest() throws Exception {
+            UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
+                "kim",
+                "pw111",
+                LocalDate.of(1991, 12, 3),
+                "가나다라마바사아자차카",
+                "yk@google.com"
+            );
+
+            String json = objectMapper.writeValueAsString(requestBody);
+
+            mockMvc.perform(post("/users")
+                    .contentType(APPLICATION_JSON)
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("이름에 숫자가 포함되면 400 Bad Request를 반환한다")
+        void userSignupApiNameContainsNumberTest() throws Exception {
+            UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
+                "kim",
+                "pw111",
+                LocalDate.of(1991, 12, 3),
+                "김용권1",
+                "yk@google.com"
+            );
+
+            String json = objectMapper.writeValueAsString(requestBody);
+
+            mockMvc.perform(post("/users")
+                    .contentType(APPLICATION_JSON)
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("이름에 특수문자가 포함되면 400 Bad Request를 반환한다")
+        void userSignupApiNameContainsSpecialCharacterTest() throws Exception {
+            UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
+                "kim",
+                "pw111",
+                LocalDate.of(1991, 12, 3),
+                "김용권!",
+                "yk@google.com"
+            );
+
+            String json = objectMapper.writeValueAsString(requestBody);
+
+            mockMvc.perform(post("/users")
+                    .contentType(APPLICATION_JSON)
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("생년월일이 null이면 400 Bad Request를 반환한다")
+        void userSignupApiBirthDateNullTest() throws Exception {
+            UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
+                "kim",
+                "pw111",
+                null,
+                "김용권",
+                "yk@google.com"
+            );
+
+            String json = objectMapper.writeValueAsString(requestBody);
+
+            mockMvc.perform(post("/users")
+                    .contentType(APPLICATION_JSON)
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("생년월일이 미래 날짜이면 400 Bad Request를 반환한다")
+        void userSignupApiBirthDateFutureTest() throws Exception {
+            UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
+                "kim",
+                "pw111",
+                LocalDate.now().plusDays(1),
+                "김용권",
+                "yk@google.com"
+            );
+
+            String json = objectMapper.writeValueAsString(requestBody);
+
+            mockMvc.perform(post("/users")
+                    .contentType(APPLICATION_JSON)
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("잘못된 JSON 형식이면 400 Bad Request를 반환한다")
+        void userSignupApiJsonInvalidTest() throws Exception {
+            String invalidJson = "{ invalid json }";
+
+            mockMvc.perform(post("/users")
+                    .contentType(APPLICATION_JSON)
+                    .content(invalidJson))
+                .andExpect(status().isBadRequest());
+        }
     }
 }
