@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 public class UserDtoValidationTest {
@@ -23,35 +24,56 @@ public class UserDtoValidationTest {
         validator = factory.getValidator();
     }
 
-    @Test
-    @DisplayName("이메일 포맷이 맞으면 성공하는 테스트")
-    void emailFormatSuccessTest() {
-        UserSignUpRequestDto dto = new UserSignUpRequestDto(
-            "kim",
-            "pw111",
-            LocalDate.of(1991, 12, 3),
-            "김용권",
-            "yk@google.com"
-        );
+    @DisplayName("이메일 검증")
+    @Nested
+    class EmailValidation {
 
-        Set<ConstraintViolation<UserSignUpRequestDto>> violations = validator.validate(dto);
+        @Test
+        @DisplayName("이메일 포맷이 맞으면 성공하는 테스트")
+        void emailFormatSuccessTest() {
+            UserSignUpRequestDto dto = new UserSignUpRequestDto(
+                "kim",
+                "pw111",
+                LocalDate.of(1991, 12, 3),
+                "김용권",
+                "yk@google.com"
+            );
 
-        assertThat(violations).isEmpty();
-    }
+            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validator.validate(dto);
 
-    @Test
-    @DisplayName("이메일 포맷이 안맞으면 실패하는 테스트")
-    void emailFormatFailTest() {
-        UserSignUpRequestDto dto = new UserSignUpRequestDto(
-            "kim",
-            "pw111",
-            LocalDate.of(1991, 12, 3),
-            "김용권",
-            "ykadasdad"
-        );
+            assertThat(violations).isEmpty();
+        }
 
-        Set<ConstraintViolation<UserSignUpRequestDto>> violations = validator.validate(dto);
+        @Test
+        @DisplayName("이메일 포맷이 안맞으면 실패하는 테스트")
+        void emailFormatFailTest() {
+            UserSignUpRequestDto dto = new UserSignUpRequestDto(
+                "kim",
+                "pw111",
+                LocalDate.of(1991, 12, 3),
+                "김용권",
+                "ykadasdad"
+            );
 
-        assertThat(violations).hasSize(1);
+            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validator.validate(dto);
+
+            assertThat(violations).hasSize(1);
+        }
+
+        @Test
+        @DisplayName("이메일에 null이 들어오면 실패하는 테스트")
+        void emailFormatNullTest() {
+            UserSignUpRequestDto dto = new UserSignUpRequestDto(
+                "kim",
+                "pw111",
+                LocalDate.of(1991, 12, 3),
+                "김용권",
+                null
+            );
+
+            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validator.validate(dto);
+
+            assertThat(violations).hasSize(1);
+        }
     }
 }

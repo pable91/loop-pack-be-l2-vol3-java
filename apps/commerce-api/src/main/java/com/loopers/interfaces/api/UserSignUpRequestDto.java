@@ -1,6 +1,7 @@
 package com.loopers.interfaces.api;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,6 +15,7 @@ public class UserSignUpRequestDto {
     private LocalDate birthDate;
     private String name;
 
+    @NotBlank
     @Email(message = "올바른 이메일 형식이 아닙니다.")
     private String email;
 }
