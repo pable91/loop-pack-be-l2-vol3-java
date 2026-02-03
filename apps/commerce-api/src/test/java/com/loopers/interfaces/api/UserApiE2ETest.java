@@ -27,7 +27,7 @@ class UserApiE2ETest {
     void userSignupApiTest() throws Exception {
         UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
             "kim",
-            "pw111",
+            "Password1",
             LocalDate.of(1991, 12, 3),
             "김용권",
             "yk@google.com"
@@ -50,7 +50,7 @@ class UserApiE2ETest {
         void userSignupApiEmailInvalidTest() throws Exception {
             UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
                 "kim",
-                "pw111",
+                "Password1",
                 LocalDate.of(1991, 12, 3),
                 "김용권",
                 "invalid-email"
@@ -69,7 +69,7 @@ class UserApiE2ETest {
         void userSignupApiEmailNullTest() throws Exception {
             UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
                 "kim",
-                "pw111",
+                "Password1",
                 LocalDate.of(1991, 12, 3),
                 "김용권",
                 null
@@ -88,7 +88,7 @@ class UserApiE2ETest {
         void userSignupApiNameNullTest() throws Exception {
             UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
                 "kim",
-                "pw111",
+                "Password1",
                 LocalDate.of(1991, 12, 3),
                 null,
                 "yk@google.com"
@@ -107,7 +107,7 @@ class UserApiE2ETest {
         void userSignupApiNameEmptyTest() throws Exception {
             UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
                 "kim",
-                "pw111",
+                "Password1",
                 LocalDate.of(1991, 12, 3),
                 "",
                 "yk@google.com"
@@ -126,7 +126,7 @@ class UserApiE2ETest {
         void userSignupApiNameTooShortTest() throws Exception {
             UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
                 "kim",
-                "pw111",
+                "Password1",
                 LocalDate.of(1991, 12, 3),
                 "김",
                 "yk@google.com"
@@ -145,7 +145,7 @@ class UserApiE2ETest {
         void userSignupApiNameTooLongTest() throws Exception {
             UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
                 "kim",
-                "pw111",
+                "Password1",
                 LocalDate.of(1991, 12, 3),
                 "가나다라마바사아자차카",
                 "yk@google.com"
@@ -164,7 +164,7 @@ class UserApiE2ETest {
         void userSignupApiNameContainsNumberTest() throws Exception {
             UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
                 "kim",
-                "pw111",
+                "Password1",
                 LocalDate.of(1991, 12, 3),
                 "김용권1",
                 "yk@google.com"
@@ -183,7 +183,7 @@ class UserApiE2ETest {
         void userSignupApiNameContainsSpecialCharacterTest() throws Exception {
             UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
                 "kim",
-                "pw111",
+                "Password1",
                 LocalDate.of(1991, 12, 3),
                 "김용권!",
                 "yk@google.com"
@@ -202,7 +202,7 @@ class UserApiE2ETest {
         void userSignupApiBirthDateNullTest() throws Exception {
             UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
                 "kim",
-                "pw111",
+                "Password1",
                 null,
                 "김용권",
                 "yk@google.com"
@@ -221,8 +221,84 @@ class UserApiE2ETest {
         void userSignupApiBirthDateFutureTest() throws Exception {
             UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
                 "kim",
-                "pw111",
+                "Password1",
                 LocalDate.now().plusDays(1),
+                "김용권",
+                "yk@google.com"
+            );
+
+            String json = objectMapper.writeValueAsString(requestBody);
+
+            mockMvc.perform(post("/users")
+                    .contentType(APPLICATION_JSON)
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("비밀번호가 7자 이하면 400 Bad Request를 반환한다")
+        void userSignupApiPwdTooShortTest() throws Exception {
+            UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
+                "kim",
+                "Abc12!",
+                LocalDate.of(1991, 12, 3),
+                "김용권",
+                "yk@google.com"
+            );
+
+            String json = objectMapper.writeValueAsString(requestBody);
+
+            mockMvc.perform(post("/users")
+                    .contentType(APPLICATION_JSON)
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("비밀번호가 17자 이상이면 400 Bad Request를 반환한다")
+        void userSignupApiPwdTooLongTest() throws Exception {
+            UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
+                "kim",
+                "Abcd123!@#efgh456",
+                LocalDate.of(1991, 12, 3),
+                "김용권",
+                "yk@google.com"
+            );
+
+            String json = objectMapper.writeValueAsString(requestBody);
+
+            mockMvc.perform(post("/users")
+                    .contentType(APPLICATION_JSON)
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("비밀번호에 한글이 포함되면 400 Bad Request를 반환한다")
+        void userSignupApiPwdContainsKoreanTest() throws Exception {
+            UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
+                "kim",
+                "Password1가",
+                LocalDate.of(1991, 12, 3),
+                "김용권",
+                "yk@google.com"
+            );
+
+            String json = objectMapper.writeValueAsString(requestBody);
+
+            mockMvc.perform(post("/users")
+                    .contentType(APPLICATION_JSON)
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("비밀번호에 공백이 포함되면 400 Bad Request를 반환한다")
+        void userSignupApiPwdContainsSpaceTest() throws Exception {
+            UserSignUpRequestDto requestBody = new UserSignUpRequestDto(
+                "kim",
+                "Password 1!",
+                LocalDate.of(1991, 12, 3),
                 "김용권",
                 "yk@google.com"
             );

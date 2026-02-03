@@ -16,6 +16,12 @@ import lombok.Getter;
 public class UserSignUpRequestDto {
 
     private String loginId;
+
+    @Size(min = 8, max = 16, message = "8~16자로 입력해주세요.")
+    @Pattern(
+        regexp = "^[A-Za-z0-9\\p{P}\\p{S}]+$",
+        message = "영문 대소문자, 숫자, 특수문자만 사용 가능합니다."
+    )
     private String pwd;
 
     @NotNull(message = "생년월일은 필수입니다.")
@@ -25,7 +31,10 @@ public class UserSignUpRequestDto {
 
     @NotBlank(message = "이름은 필수입니다.")
     @Size(min = 2, max = 10, message = "이름은 2자 이상 30자 이하여야 합니다.")
-    @Pattern(regexp = "^[가-힣a-zA-Z\\s]+$", message = "이름은 한글, 영문, 공백만 입력 가능합니다.")
+    @Pattern(
+        regexp = "^[가-힣a-zA-Z\\s]+$",
+        message = "이름은 한글, 영문, 공백만 입력 가능합니다."
+    )
     private String name;
 
     @NotBlank(message = "이메일은 필수입니다.")

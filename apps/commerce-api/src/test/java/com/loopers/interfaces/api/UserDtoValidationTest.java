@@ -54,6 +54,12 @@ public class UserDtoValidationTest {
         );
     }
 
+    private UserSignUpRequestDto dtoWithPwd(String pwd) {
+        return new UserSignUpRequestDto(
+            DEFAULT_LOGIN_ID, pwd, DEFAULT_BIRTH_DATE, DEFAULT_NAME, DEFAULT_EMAIL
+        );
+    }
+
     private Set<ConstraintViolation<UserSignUpRequestDto>> validate(UserSignUpRequestDto dto) {
         return validator.validate(dto);
     }
@@ -109,7 +115,7 @@ public class UserDtoValidationTest {
 
         @Test
         @DisplayName("미래 날짜면 실패하는 테스트")
-        void birthFormatDateIsFutureTest() {
+        void birthFormatDateIsFutureFailTest() {
             UserSignUpRequestDto dto = dtoWithBirthDate(LocalDate.now().plusDays(1));
 
             Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
@@ -119,12 +125,103 @@ public class UserDtoValidationTest {
 
         @Test
         @DisplayName("null이면 실패하는 테스트")
-        void birthFormatDateIsNullTest() {
+        void birthFormatDateIsNullFailTest() {
             UserSignUpRequestDto dto = dtoWithBirthDate(null);
 
             Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
 
             assertThat(violations).isNotEmpty();
+        }
+    }
+
+    @DisplayName("비밀번호 검증")
+    @Nested
+    class PwdValidation {
+
+        @Test
+        @DisplayName("8~16자 영문·숫자·특수문자 조합이면 검증에 통과한다")
+        void pwdFormatSuccessTest() {
+            UserSignUpRequestDto dto = defaultDto();
+
+            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
+
+            assertThat(violations).isEmpty();
+        }
+
+        @Test
+        @DisplayName("비밀번호가 정확히 8자이면 검증에 통과한다")
+        void pwdMinLengthSuccessTest() {
+            UserSignUpRequestDto dto = dtoWithPwd("Abcd123!");
+
+            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
+
+            assertThat(violations).isEmpty();
+        }
+
+        @Test
+        @DisplayName("비밀번호가 정확히 16자이면 검증에 통과한다")
+        void pwdMaxLengthSuccessTest() {
+            UserSignUpRequestDto dto = dtoWithPwd("Abcd123!@#efgh45");
+
+            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
+
+            assertThat(violations).isEmpty();
+        }
+
+        @Test
+        @DisplayName("비밀번호가 영문·숫자·특수문자만 있으면 검증에 통과한다")
+        void pwdAlphanumericAndSpecialSuccessTest() {
+            UserSignUpRequestDto dto = dtoWithPwd("Pass@word1");
+
+            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
+
+            assertThat(violations).isEmpty();
+        }
+
+        @Test
+        @DisplayName("비밀번호가 7자 이하면 검증에 실패한다")
+        void pwdTooShortFailTest() {
+            UserSignUpRequestDto dto = dtoWithPwd("Abc12!");
+
+            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
+
+            assertThat(violations).isNotEmpty();
+            assertThat(violations.iterator().next().getMessage()).isEqualTo("8~16자로 입력해주세요.");
+        }
+
+        @Test
+        @DisplayName("비밀번호가 17자 이상이면 검증에 실패한다")
+        void pwdTooLongFailTest() {
+            UserSignUpRequestDto dto = dtoWithPwd("Abcd123!@#efgh456");
+
+            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
+
+            assertThat(violations).isNotEmpty();
+            assertThat(violations.iterator().next().getMessage()).isEqualTo("8~16자로 입력해주세요.");
+        }
+
+        @Test
+        @DisplayName("비밀번호에 한글이 포함되면 검증에 실패한다")
+        void pwdContainsKoreanFailTest() {
+            UserSignUpRequestDto dto = dtoWithPwd("Password1가");
+
+            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
+
+            assertThat(violations).isNotEmpty();
+            assertThat(violations.iterator().next().getMessage())
+                .isEqualTo("영문 대소문자, 숫자, 특수문자만 사용 가능합니다.");
+        }
+
+        @Test
+        @DisplayName("비밀번호에 공백이 포함되면 검증에 실패한다")
+        void pwdContainsSpaceFailTest() {
+            UserSignUpRequestDto dto = dtoWithPwd("Password 1!");
+
+            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
+
+            assertThat(violations).isNotEmpty();
+            assertThat(violations.iterator().next().getMessage())
+                .isEqualTo("영문 대소문자, 숫자, 특수문자만 사용 가능합니다.");
         }
     }
 
@@ -184,7 +281,7 @@ public class UserDtoValidationTest {
 
         @Test
         @DisplayName("이름이 null이면 검증에 실패한다")
-        void nameIsNullSuccessTest() {
+        void nameIsNullFailTest() {
             UserSignUpRequestDto dto = dtoWithName(null);
 
             Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
@@ -195,7 +292,7 @@ public class UserDtoValidationTest {
 
         @Test
         @DisplayName("이름이 빈 문자열이면 검증에 실패한다")
-        void nameIsEmptySuccessTest() {
+        void nameIsEmptyFailTest() {
             UserSignUpRequestDto dto = dtoWithName("");
 
             Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
@@ -205,7 +302,7 @@ public class UserDtoValidationTest {
 
         @Test
         @DisplayName("이름이 공백만 있으면 검증에 실패한다")
-        void nameFormatBlankTest() {
+        void nameFormatBlankFailTest() {
             UserSignUpRequestDto dto = dtoWithName("   ");
 
             Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
@@ -218,7 +315,7 @@ public class UserDtoValidationTest {
 
         @Test
         @DisplayName("이름이 1자이면 검증에 실패한다")
-        void nameFormatTooShortTest() {
+        void nameFormatTooShortFailTest() {
             UserSignUpRequestDto dto = dtoWithName("김");
 
             Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
@@ -229,7 +326,7 @@ public class UserDtoValidationTest {
 
         @Test
         @DisplayName("이름이 11자 이상이면 검증에 실패한다")
-        void nameFormatTooLongTest() {
+        void nameFormatTooLongFailTest() {
             UserSignUpRequestDto dto = dtoWithName("가나다라마바사아자차카");
 
             Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
@@ -240,7 +337,7 @@ public class UserDtoValidationTest {
 
         @Test
         @DisplayName("이름에 숫자가 포함되면 검증에 실패한다")
-        void nameFormatContainsNumberTest() {
+        void nameFormatContainsNumberFailTest() {
             UserSignUpRequestDto dto = dtoWithName("김용권1");
 
             Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
@@ -251,7 +348,7 @@ public class UserDtoValidationTest {
 
         @Test
         @DisplayName("이름에 특수문자가 포함되면 검증에 실패한다")
-        void nameFormatContainsSpecialCharacterTest() {
+        void nameFormatContainsSpecialCharacterFailTest() {
             UserSignUpRequestDto dto = dtoWithName("김용권!");
 
             Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
@@ -262,7 +359,7 @@ public class UserDtoValidationTest {
 
         @Test
         @DisplayName("이름에 하이픈이 포함되면 검증에 실패한다")
-        void nameFormatContainsHyphenTest() {
+        void nameFormatContainsHyphenFailTest() {
             UserSignUpRequestDto dto = dtoWithName("김-용권");
 
             Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
@@ -273,7 +370,7 @@ public class UserDtoValidationTest {
 
         @Test
         @DisplayName("이름에 점이 포함되면 검증에 실패한다")
-        void nameFormatContainsDotTest() {
+        void nameFormatContainsDotFailTest() {
             UserSignUpRequestDto dto = dtoWithName("김.용권");
 
             Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
