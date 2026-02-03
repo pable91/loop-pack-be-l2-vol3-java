@@ -16,8 +16,6 @@ import org.junit.jupiter.api.Test;
 
 public class UserDtoValidationTest {
 
-    private static final String DEFAULT_LOGIN_ID = "kim";
-    private static final String DEFAULT_PWD = "Password1";
     private static final LocalDate DEFAULT_BIRTH_DATE = LocalDate.of(1991, 12, 3);
     private static final String DEFAULT_NAME = "김용권";
     private static final String DEFAULT_EMAIL = "yk@google.com";
@@ -31,33 +29,19 @@ public class UserDtoValidationTest {
     }
 
     private UserSignUpRequestDto defaultDto() {
-        return new UserSignUpRequestDto(
-            DEFAULT_LOGIN_ID, DEFAULT_PWD, DEFAULT_BIRTH_DATE, DEFAULT_NAME, DEFAULT_EMAIL
-        );
+        return new UserSignUpRequestDto(DEFAULT_BIRTH_DATE, DEFAULT_NAME, DEFAULT_EMAIL);
     }
 
     private UserSignUpRequestDto dtoWithEmail(String email) {
-        return new UserSignUpRequestDto(
-            DEFAULT_LOGIN_ID, DEFAULT_PWD, DEFAULT_BIRTH_DATE, DEFAULT_NAME, email
-        );
+        return new UserSignUpRequestDto(DEFAULT_BIRTH_DATE, DEFAULT_NAME, email);
     }
 
     private UserSignUpRequestDto dtoWithBirthDate(LocalDate birthDate) {
-        return new UserSignUpRequestDto(
-            DEFAULT_LOGIN_ID, DEFAULT_PWD, birthDate, DEFAULT_NAME, DEFAULT_EMAIL
-        );
+        return new UserSignUpRequestDto(birthDate, DEFAULT_NAME, DEFAULT_EMAIL);
     }
 
     private UserSignUpRequestDto dtoWithName(String name) {
-        return new UserSignUpRequestDto(
-            DEFAULT_LOGIN_ID, DEFAULT_PWD, DEFAULT_BIRTH_DATE, name, DEFAULT_EMAIL
-        );
-    }
-
-    private UserSignUpRequestDto dtoWithPwd(String pwd) {
-        return new UserSignUpRequestDto(
-            DEFAULT_LOGIN_ID, pwd, DEFAULT_BIRTH_DATE, DEFAULT_NAME, DEFAULT_EMAIL
-        );
+        return new UserSignUpRequestDto(DEFAULT_BIRTH_DATE, name, DEFAULT_EMAIL);
     }
 
     private Set<ConstraintViolation<UserSignUpRequestDto>> validate(UserSignUpRequestDto dto) {
@@ -131,97 +115,6 @@ public class UserDtoValidationTest {
             Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
 
             assertThat(violations).isNotEmpty();
-        }
-    }
-
-    @DisplayName("비밀번호 검증")
-    @Nested
-    class PwdValidation {
-
-        @Test
-        @DisplayName("8~16자 영문·숫자·특수문자 조합이면 검증에 통과한다")
-        void pwdFormatSuccessTest() {
-            UserSignUpRequestDto dto = defaultDto();
-
-            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
-
-            assertThat(violations).isEmpty();
-        }
-
-        @Test
-        @DisplayName("비밀번호가 정확히 8자이면 검증에 통과한다")
-        void pwdMinLengthSuccessTest() {
-            UserSignUpRequestDto dto = dtoWithPwd("Abcd123!");
-
-            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
-
-            assertThat(violations).isEmpty();
-        }
-
-        @Test
-        @DisplayName("비밀번호가 정확히 16자이면 검증에 통과한다")
-        void pwdMaxLengthSuccessTest() {
-            UserSignUpRequestDto dto = dtoWithPwd("Abcd123!@#efgh45");
-
-            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
-
-            assertThat(violations).isEmpty();
-        }
-
-        @Test
-        @DisplayName("비밀번호가 영문·숫자·특수문자만 있으면 검증에 통과한다")
-        void pwdAlphanumericAndSpecialSuccessTest() {
-            UserSignUpRequestDto dto = dtoWithPwd("Pass@word1");
-
-            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
-
-            assertThat(violations).isEmpty();
-        }
-
-        @Test
-        @DisplayName("비밀번호가 7자 이하면 검증에 실패한다")
-        void pwdTooShortFailTest() {
-            UserSignUpRequestDto dto = dtoWithPwd("Abc12!");
-
-            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
-
-            assertThat(violations).isNotEmpty();
-            assertThat(violations.iterator().next().getMessage()).isEqualTo("8~16자로 입력해주세요.");
-        }
-
-        @Test
-        @DisplayName("비밀번호가 17자 이상이면 검증에 실패한다")
-        void pwdTooLongFailTest() {
-            UserSignUpRequestDto dto = dtoWithPwd("Abcd123!@#efgh456");
-
-            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
-
-            assertThat(violations).isNotEmpty();
-            assertThat(violations.iterator().next().getMessage()).isEqualTo("8~16자로 입력해주세요.");
-        }
-
-        @Test
-        @DisplayName("비밀번호에 한글이 포함되면 검증에 실패한다")
-        void pwdContainsKoreanFailTest() {
-            UserSignUpRequestDto dto = dtoWithPwd("Password1가");
-
-            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
-
-            assertThat(violations).isNotEmpty();
-            assertThat(violations.iterator().next().getMessage())
-                .isEqualTo("영문 대소문자, 숫자, 특수문자만 사용 가능합니다.");
-        }
-
-        @Test
-        @DisplayName("비밀번호에 공백이 포함되면 검증에 실패한다")
-        void pwdContainsSpaceFailTest() {
-            UserSignUpRequestDto dto = dtoWithPwd("Password 1!");
-
-            Set<ConstraintViolation<UserSignUpRequestDto>> violations = validate(dto);
-
-            assertThat(violations).isNotEmpty();
-            assertThat(violations.iterator().next().getMessage())
-                .isEqualTo("영문 대소문자, 숫자, 특수문자만 사용 가능합니다.");
         }
     }
 

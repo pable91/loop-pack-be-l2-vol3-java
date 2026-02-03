@@ -15,15 +15,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class UserSignUpRequestDto {
 
-    private String loginId;
-
-    @Size(min = 8, max = 16, message = "8~16자로 입력해주세요.")
-    @Pattern(
-        regexp = "^[A-Za-z0-9\\p{P}\\p{S}]+$",
-        message = "영문 대소문자, 숫자, 특수문자만 사용 가능합니다."
-    )
-    private String pwd;
-
     @NotNull(message = "생년월일은 필수입니다.")
     @Past(message = "생년월일은 과거 날짜여야 합니다.")
     @JsonFormat(pattern = "yyyy-MM-dd")
