@@ -1,4 +1,4 @@
-package com.loopers.application;
+package com.loopers.domain;
 
 import com.loopers.interfaces.api.UsersSignUpRequestDto;
 import com.loopers.support.error.CoreException;
@@ -14,17 +14,22 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
 
-    public void signup(String loginId, String loginPw, UsersSignUpRequestDto requestDto) {
+    public void signUp(String loginId, String loginPw, UsersSignUpRequestDto requestDto) {
         validatePasswordContent(loginPw, requestDto.getBirthDate());
 
         String encodedPw = passwordEncoder.encode(loginPw);
 
-        // TODO
-        // Users 엔티티
+        UserModel.create(
+            loginId,
+            encodedPw,
+            requestDto
+        );
     }
 
     private void validatePasswordContent(String password, LocalDate birthDate) {
-        if (password == null || birthDate == null) return;
+        if (password == null || birthDate == null) {
+            return;
+        }
 
         String birthStr = birthDate.toString().replace("-", "");
 

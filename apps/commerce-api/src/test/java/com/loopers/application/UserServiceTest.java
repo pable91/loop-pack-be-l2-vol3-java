@@ -5,6 +5,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.loopers.domain.UserService;
 import com.loopers.interfaces.api.UsersSignUpRequestDto;
 import com.loopers.support.error.CoreException;
 import java.time.LocalDate;
@@ -39,7 +40,7 @@ public class UserServiceTest {
 
         given(passwordEncoder.encode(rawPw)).willReturn(encodedPw);
 
-        userService.signup("user123", rawPw, dto);
+        userService.signUp("user123", rawPw, dto);
 
         verify(passwordEncoder, times(1)).encode(rawPw);
     }
@@ -51,7 +52,7 @@ public class UserServiceTest {
         String rawPw = "pw19911203!!"; // 생일 포함
         UsersSignUpRequestDto dto = createDto(LocalDate.of(1991,12, 3));
 
-        assertThatThrownBy(() -> userService.signup("user123", rawPw, dto))
+        assertThatThrownBy(() -> userService.signUp("user123", rawPw, dto))
             .isInstanceOf(CoreException.class)
             .hasMessageContaining("생년월일을 포함할 수 없습니다");
     }
