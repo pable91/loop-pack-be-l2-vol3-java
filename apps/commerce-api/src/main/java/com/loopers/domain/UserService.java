@@ -3,6 +3,7 @@ package com.loopers.domain;
 import com.loopers.application.SignUpCommand;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
+import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,15 +14,19 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
 
+    @Transactional
     public void signUp(SignUpCommand command) {
         validatePasswordContent(command.getLoginPw(), command.getBirthDate());
 
         String encodedPw = passwordEncoder.encode(command.getLoginPw());
 
-        UserModel.create(
-            command,
-            encodedPw
+        userRepository.save(
+            UserModel.create(
+                command,
+                encodedPw
+            )
         );
     }
 
