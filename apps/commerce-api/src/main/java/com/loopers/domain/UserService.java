@@ -1,6 +1,6 @@
 package com.loopers.domain;
 
-import com.loopers.interfaces.api.UsersSignUpRequestDto;
+import com.loopers.application.SignUpCommand;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import java.time.LocalDate;
@@ -14,15 +14,14 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
 
-    public void signUp(String loginId, String loginPw, UsersSignUpRequestDto requestDto) {
-        validatePasswordContent(loginPw, requestDto.getBirthDate());
+    public void signUp(SignUpCommand command) {
+        validatePasswordContent(command.getLoginPw(), command.getBirthDate());
 
-        String encodedPw = passwordEncoder.encode(loginPw);
+        String encodedPw = passwordEncoder.encode(command.getLoginPw());
 
         UserModel.create(
-            loginId,
-            encodedPw,
-            requestDto
+            command,
+            encodedPw
         );
     }
 

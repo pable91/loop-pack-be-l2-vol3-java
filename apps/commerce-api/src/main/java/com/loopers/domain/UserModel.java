@@ -1,6 +1,6 @@
 package com.loopers.domain;
 
-import com.loopers.interfaces.api.UsersSignUpRequestDto;
+import com.loopers.application.SignUpCommand;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -48,13 +48,13 @@ public class UserModel extends BaseEntity {
         this.email = email;
     }
 
-    public static UserModel create(String loginId, String encodedPw, UsersSignUpRequestDto requestDto) {
+    public static UserModel create(SignUpCommand command, String encodedPw) {
         return UserModel.builder()
-            .loginId(loginId)
+            .loginId(command.getLoginId())
             .encodedPw(encodedPw)
-            .birthDate(requestDto.getBirthDate())
-            .name(requestDto.getName())
-            .email(requestDto.getEmail())
+            .birthDate(command.getBirthDate())
+            .name(command.getName())
+            .email(command.getEmail())
             .build();
     }
 }

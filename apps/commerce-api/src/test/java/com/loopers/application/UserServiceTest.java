@@ -26,21 +26,23 @@ public class UserServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    private UsersSignUpRequestDto createDto(LocalDate birthDate) {
-        return new UsersSignUpRequestDto(birthDate, "email@test.com", "kkk@gmail.com");
-    }
-
     @Test
     @DisplayName("회원가입 성공 테스트")
     void success_signup() {
 
         String rawPw = "securePassword!@";
         String encodedPw = "encoded_hash";
-        UsersSignUpRequestDto dto = createDto(LocalDate.of(1995, 1, 1));
+        SignUpCommand signUpCommand = new SignUpCommand(
+            "user123",
+            rawPw,
+            LocalDate.of(1995, 1, 1),
+            "kim",
+            "yk@naver.com"
+        );
 
         given(passwordEncoder.encode(rawPw)).willReturn(encodedPw);
 
-        userService.signUp("user123", rawPw, dto);
+        userService.signUp(signUpCommand);
 
         verify(passwordEncoder, times(1)).encode(rawPw);
     }
@@ -50,9 +52,15 @@ public class UserServiceTest {
     void fail_with_birthDate() {
 
         String rawPw = "pw19911203!!"; // 생일 포함
-        UsersSignUpRequestDto dto = createDto(LocalDate.of(1991,12, 3));
+        SignUpCommand signUpCommand = new SignUpCommand(
+            "user123",
+            rawPw,
+            LocalDate.of(1991, 12, 3),
+            "kim",
+            "yk@naver.com"
+        );
 
-        assertThatThrownBy(() -> userService.signUp("user123", rawPw, dto))
+        assertThatThrownBy(() -> userService.signUp(signUpCommand))
             .isInstanceOf(CoreException.class)
             .hasMessageContaining("생년월일을 포함할 수 없습니다");
     }

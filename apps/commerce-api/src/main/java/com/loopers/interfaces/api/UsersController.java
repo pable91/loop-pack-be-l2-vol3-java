@@ -1,5 +1,6 @@
 package com.loopers.interfaces.api;
 
+import com.loopers.application.SignUpCommand;
 import com.loopers.domain.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -32,7 +33,14 @@ public class UsersController {
         String loginPw,
         @Valid @RequestBody UsersSignUpRequestDto requestDto
     ) {
-        userService.signUp(loginId, loginPw, requestDto);
+        SignUpCommand command = new SignUpCommand(
+            loginId,
+            loginPw,
+            requestDto.getBirthDate(),
+            requestDto.getName(),
+            requestDto.getEmail()
+        );
+        userService.signUp(command);
         return ApiResponse.success("ok");
     }
 }
