@@ -1,22 +1,26 @@
 package com.loopers.domain;
 
 import com.loopers.application.SignUpCommand;
+import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
-import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
 
 @Entity
 @Table(name = "users")
 @NoArgsConstructor
+@Getter
 public class UserModel extends BaseEntity {
 
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue
     private Long id;
 
     @Comment("아이디")
@@ -39,22 +43,40 @@ public class UserModel extends BaseEntity {
     @Column(name = "email", nullable = false)
     private String email;
 
-    @Builder
-    public UserModel(String loginId, String encodedPw, LocalDate birthDate, String name, String email) {
+    private UserModel(String loginId, String password, LocalDate birthDate, String name, String email) {
         this.loginId = loginId;
-        this.password = encodedPw;
+        this.password = password;
         this.birthDate = birthDate;
         this.name = name;
         this.email = email;
     }
 
+    @Override
+    protected void guard() {
+        if (loginId == null || loginId.isBlank()) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "로그인 ID는 필수입니다.");
+        }
+        if (password == null || password.isBlank()) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "비밀번호는 필수입니다.");
+        }
+        if (birthDate == null) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "생년월일은 필수입니다.");
+        }
+        if (name == null || name.isBlank()) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "이름은 필수입니다.");
+        }
+        if (email == null || email.isBlank()) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "이메일은 필수입니다.");
+        }
+    }
+
     public static UserModel create(SignUpCommand command, String encodedPw) {
-        return UserModel.builder()
-            .loginId(command.getLoginId())
-            .encodedPw(encodedPw)
-            .birthDate(command.getBirthDate())
-            .name(command.getName())
-            .email(command.getEmail())
-            .build();
+        return new UserModel(
+            command.getLoginId(),
+            encodedPw,
+            command.getBirthDate(),
+            command.getName(),
+            command.getEmail()
+        );
     }
 }
