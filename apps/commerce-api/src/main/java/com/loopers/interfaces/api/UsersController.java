@@ -1,11 +1,13 @@
 package com.loopers.interfaces.api;
 
+import com.loopers.application.AuthUserPrincipal;
 import com.loopers.application.SignUpCommand;
 import com.loopers.application.UserFacade;
 import com.loopers.application.UserInfo;
 import com.loopers.interfaces.UserDto;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,5 +36,11 @@ public class UsersController {
         UserInfo userInfo = userFacade.signUp(command);
 
         return ApiResponse.success(UserDto.SignUpResponse.from(userInfo));
+    }
+
+    @GetMapping("/me")
+    public ApiResponse<UserDto.MyInfoResponse> getMe() {
+
+        return ApiResponse.success(UserDto.MyInfoResponse.mock());
     }
 }
