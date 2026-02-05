@@ -1,7 +1,6 @@
 package com.loopers.interfaces.api;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -419,6 +418,9 @@ class UserControllerTest {
             ChangePasswordRequest request = new ChangePasswordRequest("OldPass1!", "NewPass1!");
             String json = objectMapper.writeValueAsString(request);
 
+            given(userService.authenticate("kim", "OldPass1!")).willReturn(mockUser());
+            doNothing().when(userFacade).changePassword(any(), any(ChangePasswordRequest.class));
+
             mockMvc.perform(patch("/users/me/password")
                     .contentType(APPLICATION_JSON)
                     .header(LoopersHeaders.X_LOOPERS_LOGIN_ID, "kim")
@@ -434,6 +436,8 @@ class UserControllerTest {
             ChangePasswordRequest request = new ChangePasswordRequest(null, "NewPass1!");
             String json = objectMapper.writeValueAsString(request);
 
+            given(userService.authenticate("kim", "OldPass1!")).willReturn(mockUser());
+
             mockMvc.perform(patch("/users/me/password")
                     .contentType(APPLICATION_JSON)
                     .header(LoopersHeaders.X_LOOPERS_LOGIN_ID, "kim")
@@ -447,6 +451,8 @@ class UserControllerTest {
         void fail_when_newPassword_is_null() throws Exception {
             ChangePasswordRequest request = new ChangePasswordRequest("OldPass1!", null);
             String json = objectMapper.writeValueAsString(request);
+
+            given(userService.authenticate("kim", "OldPass1!")).willReturn(mockUser());
 
             mockMvc.perform(patch("/users/me/password")
                     .contentType(APPLICATION_JSON)
@@ -462,6 +468,8 @@ class UserControllerTest {
             ChangePasswordRequest request = new ChangePasswordRequest("OldPass1!", "Pass1!");
             String json = objectMapper.writeValueAsString(request);
 
+            given(userService.authenticate("kim", "OldPass1!")).willReturn(mockUser());
+
             mockMvc.perform(patch("/users/me/password")
                     .contentType(APPLICATION_JSON)
                     .header(LoopersHeaders.X_LOOPERS_LOGIN_ID, "kim")
@@ -475,6 +483,8 @@ class UserControllerTest {
         void fail_when_newPassword_too_long() throws Exception {
             ChangePasswordRequest request = new ChangePasswordRequest("OldPass1!", "Password123456789!");
             String json = objectMapper.writeValueAsString(request);
+
+            given(userService.authenticate("kim", "OldPass1!")).willReturn(mockUser());
 
             mockMvc.perform(patch("/users/me/password")
                     .contentType(APPLICATION_JSON)
@@ -490,6 +500,8 @@ class UserControllerTest {
             ChangePasswordRequest request = new ChangePasswordRequest("OldPass1!", "NewPass1가");
             String json = objectMapper.writeValueAsString(request);
 
+            given(userService.authenticate("kim", "OldPass1!")).willReturn(mockUser());
+
             mockMvc.perform(patch("/users/me/password")
                     .contentType(APPLICATION_JSON)
                     .header(LoopersHeaders.X_LOOPERS_LOGIN_ID, "kim")
@@ -503,6 +515,8 @@ class UserControllerTest {
         void fail_when_newPassword_contains_space() throws Exception {
             ChangePasswordRequest request = new ChangePasswordRequest("OldPass1!", "New Pass1!");
             String json = objectMapper.writeValueAsString(request);
+
+            given(userService.authenticate("kim", "OldPass1!")).willReturn(mockUser());
 
             mockMvc.perform(patch("/users/me/password")
                     .contentType(APPLICATION_JSON)
