@@ -1,12 +1,12 @@
-package com.loopers.interfaces.api;
+package com.loopers.interfaces.user;
 
 import com.loopers.application.AuthUserPrincipal;
 import com.loopers.application.SignUpCommand;
 import com.loopers.application.UserFacade;
 import com.loopers.application.UserInfo;
-import com.loopers.interfaces.UserDto;
-import com.loopers.interfaces.request.ChangePasswordRequest;
-import com.loopers.interfaces.request.UsersSignUpRequestDto;
+import com.loopers.interfaces.api.ApiResponse;
+import com.loopers.interfaces.api.AuthUser;
+import com.loopers.interfaces.api.CredentialsHeaders;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

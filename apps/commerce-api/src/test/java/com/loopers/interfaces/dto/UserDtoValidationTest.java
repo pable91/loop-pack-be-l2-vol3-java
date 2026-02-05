@@ -3,8 +3,8 @@ package com.loopers.interfaces.dto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.loopers.interfaces.request.ChangePasswordRequest;
-import com.loopers.interfaces.request.UsersSignUpRequestDto;
+import com.loopers.interfaces.user.ChangePasswordRequest;
+import com.loopers.interfaces.user.UsersSignUpRequestDto;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;

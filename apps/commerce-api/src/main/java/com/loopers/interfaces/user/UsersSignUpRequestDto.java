@@ -1,4 +1,4 @@
-package com.loopers.interfaces.request;
+package com.loopers.interfaces.user;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Email;

@@ -2,7 +2,7 @@ package com.loopers.application;
 
 import com.loopers.domain.UserModel;
 import com.loopers.domain.UserService;
-import com.loopers.interfaces.request.ChangePasswordRequest;
+import com.loopers.interfaces.user.ChangePasswordRequest;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import java.time.LocalDate;

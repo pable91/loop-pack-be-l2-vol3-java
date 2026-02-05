@@ -1,4 +1,4 @@
-package com.loopers.interfaces.request;
+package com.loopers.interfaces.user;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

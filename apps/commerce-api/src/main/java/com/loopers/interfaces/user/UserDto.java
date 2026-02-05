@@ -1,4 +1,4 @@
-package com.loopers.interfaces;
+package com.loopers.interfaces.user;
 
 import com.loopers.application.UserInfo;
 import com.loopers.support.MaskingUtils;
