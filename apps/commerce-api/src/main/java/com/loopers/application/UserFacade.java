@@ -17,7 +17,7 @@ public class UserFacade {
     private final UserService userService;
 
     public void signUp(SignUpCommand command) {
-        // 만약 또다른 검증 조건이 생긴다면
+        // 만약 또다른 검증 조건이 생긴다면, 클래스로 분리
         validatePasswordContent(command.getLoginPw(), command.getBirthDate());
 
         String encodedPw = passwordEncoder.encode(command.getLoginPw());
