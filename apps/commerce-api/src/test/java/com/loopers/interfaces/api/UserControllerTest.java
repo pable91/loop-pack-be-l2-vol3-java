@@ -1,8 +1,11 @@
 package com.loopers.interfaces.api;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -11,7 +14,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loopers.application.SignUpCommand;
 import com.loopers.application.UserFacade;
 import com.loopers.application.UserInfo;
+import com.loopers.config.WebMvcConfig;
+import com.loopers.domain.UserModel;
 import com.loopers.domain.UserService;
+import com.loopers.interfaces.request.ChangePasswordRequest;
 import com.loopers.interfaces.request.UsersSignUpRequestDto;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
@@ -22,8 +28,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
-import com.loopers.config.WebMvcConfig;
 
 @WebMvcTest(UsersController.class)
 @Import({WebMvcConfig.class, CredentialsHeadersArgumentResolver.class, AuthUserArgumentResolver.class})
@@ -397,6 +401,114 @@ class UserControllerTest {
                     .header(LoopersHeaders.X_LOOPERS_LOGIN_ID, "kim")
                     .header(LoopersHeaders.X_LOOPERS_LOGIN_PW, "Password1")
                     .content(invalidJson))
+                .andExpect(status().isBadRequest());
+        }
+    }
+
+    @DisplayName("비밀번호 변경 API")
+    @Nested
+    class ChangePasswordTest {
+
+        private UserModel mockUser() {
+            return UserModel.create("kim", "encodedOldPass", LocalDate.of(1991, 12, 3), "김용권", "yk@google.com");
+        }
+
+        @Test
+        @DisplayName("비밀번호 변경에 성공한다")
+        void success() throws Exception {
+            ChangePasswordRequest request = new ChangePasswordRequest("OldPass1!", "NewPass1!");
+            String json = objectMapper.writeValueAsString(request);
+
+            mockMvc.perform(patch("/users/me/password")
+                    .contentType(APPLICATION_JSON)
+                    .header(LoopersHeaders.X_LOOPERS_LOGIN_ID, "kim")
+                    .header(LoopersHeaders.X_LOOPERS_LOGIN_PW, "OldPass1!")
+                    .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.meta.result").value("SUCCESS"));
+        }
+
+        @Test
+        @DisplayName("기존 비밀번호가 null이면 400 Bad Request를 반환한다")
+        void fail_when_currentPassword_is_null() throws Exception {
+            ChangePasswordRequest request = new ChangePasswordRequest(null, "NewPass1!");
+            String json = objectMapper.writeValueAsString(request);
+
+            mockMvc.perform(patch("/users/me/password")
+                    .contentType(APPLICATION_JSON)
+                    .header(LoopersHeaders.X_LOOPERS_LOGIN_ID, "kim")
+                    .header(LoopersHeaders.X_LOOPERS_LOGIN_PW, "OldPass1!")
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("새 비밀번호가 null이면 400 Bad Request를 반환한다")
+        void fail_when_newPassword_is_null() throws Exception {
+            ChangePasswordRequest request = new ChangePasswordRequest("OldPass1!", null);
+            String json = objectMapper.writeValueAsString(request);
+
+            mockMvc.perform(patch("/users/me/password")
+                    .contentType(APPLICATION_JSON)
+                    .header(LoopersHeaders.X_LOOPERS_LOGIN_ID, "kim")
+                    .header(LoopersHeaders.X_LOOPERS_LOGIN_PW, "OldPass1!")
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("새 비밀번호가 7자 이하면 400 Bad Request를 반환한다")
+        void fail_when_newPassword_too_short() throws Exception {
+            ChangePasswordRequest request = new ChangePasswordRequest("OldPass1!", "Pass1!");
+            String json = objectMapper.writeValueAsString(request);
+
+            mockMvc.perform(patch("/users/me/password")
+                    .contentType(APPLICATION_JSON)
+                    .header(LoopersHeaders.X_LOOPERS_LOGIN_ID, "kim")
+                    .header(LoopersHeaders.X_LOOPERS_LOGIN_PW, "OldPass1!")
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("새 비밀번호가 17자 이상이면 400 Bad Request를 반환한다")
+        void fail_when_newPassword_too_long() throws Exception {
+            ChangePasswordRequest request = new ChangePasswordRequest("OldPass1!", "Password123456789!");
+            String json = objectMapper.writeValueAsString(request);
+
+            mockMvc.perform(patch("/users/me/password")
+                    .contentType(APPLICATION_JSON)
+                    .header(LoopersHeaders.X_LOOPERS_LOGIN_ID, "kim")
+                    .header(LoopersHeaders.X_LOOPERS_LOGIN_PW, "OldPass1!")
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("새 비밀번호에 한글이 포함되면 400 Bad Request를 반환한다")
+        void fail_when_newPassword_contains_korean() throws Exception {
+            ChangePasswordRequest request = new ChangePasswordRequest("OldPass1!", "NewPass1가");
+            String json = objectMapper.writeValueAsString(request);
+
+            mockMvc.perform(patch("/users/me/password")
+                    .contentType(APPLICATION_JSON)
+                    .header(LoopersHeaders.X_LOOPERS_LOGIN_ID, "kim")
+                    .header(LoopersHeaders.X_LOOPERS_LOGIN_PW, "OldPass1!")
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("새 비밀번호에 공백이 포함되면 400 Bad Request를 반환한다")
+        void fail_when_newPassword_contains_space() throws Exception {
+            ChangePasswordRequest request = new ChangePasswordRequest("OldPass1!", "New Pass1!");
+            String json = objectMapper.writeValueAsString(request);
+
+            mockMvc.perform(patch("/users/me/password")
+                    .contentType(APPLICATION_JSON)
+                    .header(LoopersHeaders.X_LOOPERS_LOGIN_ID, "kim")
+                    .header(LoopersHeaders.X_LOOPERS_LOGIN_PW, "OldPass1!")
+                    .content(json))
                 .andExpect(status().isBadRequest());
         }
     }
