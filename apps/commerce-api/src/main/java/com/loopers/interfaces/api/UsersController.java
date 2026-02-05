@@ -2,6 +2,8 @@ package com.loopers.interfaces.api;
 
 import com.loopers.application.SignUpCommand;
 import com.loopers.application.UserFacade;
+import com.loopers.application.UserInfo;
+import com.loopers.interfaces.UserDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -23,7 +25,7 @@ public class UsersController {
     private final UserFacade userFacade;
 
     @PostMapping
-    public ApiResponse<String> signUp(
+    public ApiResponse<UserDto.SignUpResponse> signUp(
         @RequestHeader(LoopersHeaders.X_LOOPERS_LOGIN_ID) @NotBlank(message = "로그인 ID는 필수입니다.")
         @Pattern(regexp = "^[A-Za-z0-9]+$", message = "로그인 ID는 영문 대소문자, 숫자만 사용 가능합니다.") String loginId,
         @RequestHeader(LoopersHeaders.X_LOOPERS_LOGIN_PW) @NotBlank(message = "비밀번호는 필수입니다.") @Size(min = 8, max = 16, message = "8~16자로 입력해주세요.")
@@ -41,7 +43,9 @@ public class UsersController {
             requestDto.getName(),
             requestDto.getEmail()
         );
-        userFacade.signUp(command);
-        return ApiResponse.success("ok");
+
+        UserInfo userInfo = userFacade.signUp(command);
+
+        return ApiResponse.success(UserDto.SignUpResponse.from(userInfo));
     }
 }

@@ -16,7 +16,7 @@ public class UserFacade {
     private final PasswordEncoder passwordEncoder;
     private final UserService userService;
 
-    public void signUp(SignUpCommand command) {
+    public UserInfo signUp(SignUpCommand command) {
         if (userService.existsByEmail(command.getEmail())) {
             throw new CoreException(ErrorType.BAD_REQUEST, "이미 가입되어 있는 아이디 입니다.");
         }
@@ -27,12 +27,14 @@ public class UserFacade {
 
         String encodedPw = passwordEncoder.encode(command.getLoginPw());
 
-        userService.save(
+        UserModel userModel = userService.save(
             UserModel.create(
                 command,
                 encodedPw
             )
         );
+
+        return UserInfo.from(userModel);
     }
 
     private void validatePasswordContent(String password, LocalDate birthDate) {

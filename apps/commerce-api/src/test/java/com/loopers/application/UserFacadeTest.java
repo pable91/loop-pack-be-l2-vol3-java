@@ -45,7 +45,8 @@ public class UserFacadeTest {
         );
 
         given(passwordEncoder.encode(rawPw)).willReturn(encodedPw);
-        given(userService.save(any(UserModel.class))).willReturn(any(UserModel.class));
+        UserModel savedUser = UserModel.create(signUpCommand, encodedPw);
+        given(userService.save(any(UserModel.class))).willReturn(savedUser);
 
         userFacade.signUp(signUpCommand);
 

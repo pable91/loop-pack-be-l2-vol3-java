@@ -1,11 +1,16 @@
 package com.loopers.interfaces.api;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.loopers.application.SignUpCommand;
 import com.loopers.application.UserFacade;
+import com.loopers.application.UserInfo;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -36,14 +41,18 @@ class UserControllerTest {
             "yk@google.com"
         );
 
+        UserInfo userInfo = new UserInfo(1L, "김용권", "yk@google.com");
+        given(userFacade.signUp(any(SignUpCommand.class))).willReturn(userInfo);
+
         String json = objectMapper.writeValueAsString(requestBody);
 
         mockMvc.perform(post("/users")
                 .contentType(APPLICATION_JSON)
                 .header(LoopersHeaders.X_LOOPERS_LOGIN_ID, "kim")
-                .header(LoopersHeaders.X_LOOPERS_LOGIN_PW, "Password1")
+                .header(LoopersHeaders.X_LOOPERS_LOGIN_PW, "Password1!")
                 .content(json))
-            .andExpect(status().isOk());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.id").value(1));
     }
 
     @DisplayName("회원가입 API 실패 테스트")
