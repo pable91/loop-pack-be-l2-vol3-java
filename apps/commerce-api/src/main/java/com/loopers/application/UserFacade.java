@@ -2,6 +2,7 @@ package com.loopers.application;
 
 import com.loopers.domain.UserModel;
 import com.loopers.domain.UserService;
+import com.loopers.interfaces.request.ChangePasswordRequest;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import java.time.LocalDate;
@@ -49,5 +50,9 @@ public class UserFacade {
         if (password.contains(birthStr)) {
             throw new CoreException(ErrorType.NOT_INCLUDE_BIRTH_IN_PASSWORD);
         }
+    }
+
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        userService.changePassword(userId, request.currentPassword(), request.newPassword());
     }
 }

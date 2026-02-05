@@ -72,4 +72,8 @@ public class UserModel extends BaseEntity {
     public static UserModel create(String loginId, String encodedPassword, LocalDate birthDate, String name, String email) {
         return new UserModel(loginId, encodedPassword, birthDate, name, email);
     }
+
+    public void changePassword(String newEncodedPassword) {
+        this.password = newEncodedPassword;
+    }
 }

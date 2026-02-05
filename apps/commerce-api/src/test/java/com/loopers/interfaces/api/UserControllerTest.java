@@ -12,6 +12,7 @@ import com.loopers.application.SignUpCommand;
 import com.loopers.application.UserFacade;
 import com.loopers.application.UserInfo;
 import com.loopers.domain.UserService;
+import com.loopers.interfaces.request.UsersSignUpRequestDto;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

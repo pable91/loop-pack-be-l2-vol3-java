@@ -5,10 +5,12 @@ import com.loopers.application.SignUpCommand;
 import com.loopers.application.UserFacade;
 import com.loopers.application.UserInfo;
 import com.loopers.interfaces.UserDto;
+import com.loopers.interfaces.request.ChangePasswordRequest;
 import com.loopers.interfaces.request.UsersSignUpRequestDto;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,5 +45,14 @@ public class UsersController {
     public ApiResponse<UserDto.MyInfoResponse> getMe(@AuthUser AuthUserPrincipal authUser) {
         UserInfo userInfo = userFacade.getMyInfo(authUser.getId());
         return ApiResponse.success(UserDto.MyInfoResponse.from(userInfo));
+    }
+
+    @PatchMapping("/me/password")
+    public ApiResponse<Void> changePassword(
+        @AuthUser AuthUserPrincipal authUser,
+        @Valid @RequestBody ChangePasswordRequest request
+    ) {
+        userFacade.changePassword(authUser.getId(), request);
+        return ApiResponse.success(null);
     }
 }
