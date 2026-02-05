@@ -1,7 +1,7 @@
 package com.loopers.interfaces.api;
 
 import com.loopers.application.SignUpCommand;
-import com.loopers.domain.UserService;
+import com.loopers.application.UserFacade;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 public class UsersController {
 
-    private final UserService userService;
+    private final UserFacade userFacade;
 
     @PostMapping
     public ApiResponse<String> signUp(
@@ -40,7 +40,7 @@ public class UsersController {
             requestDto.getName(),
             requestDto.getEmail()
         );
-        userService.signUp(command);
+        userFacade.signUp(command);
         return ApiResponse.success("ok");
     }
 }

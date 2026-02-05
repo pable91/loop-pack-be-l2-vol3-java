@@ -1,12 +1,13 @@
 package com.loopers.application;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.loopers.domain.UserModel;
 import com.loopers.domain.UserService;
-import com.loopers.interfaces.api.UsersSignUpRequestDto;
 import com.loopers.support.error.CoreException;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
@@ -18,13 +19,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
-public class UserServiceTest {
+public class UserFacadeTest {
 
     @InjectMocks
-    private UserService userService;
+    private UserFacade userFacade;
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private UserService userService;
 
     @Test
     @DisplayName("회원가입 성공 테스트")
@@ -41,10 +45,12 @@ public class UserServiceTest {
         );
 
         given(passwordEncoder.encode(rawPw)).willReturn(encodedPw);
+        given(userService.save(any(UserModel.class))).willReturn(any(UserModel.class));
 
-        userService.signUp(signUpCommand);
+        userFacade.signUp(signUpCommand);
 
         verify(passwordEncoder, times(1)).encode(rawPw);
+        verify(userService, times(1)).save(any(UserModel.class));
     }
 
     @Test
@@ -60,7 +66,7 @@ public class UserServiceTest {
             "yk@naver.com"
         );
 
-        assertThatThrownBy(() -> userService.signUp(signUpCommand))
+        assertThatThrownBy(() -> userFacade.signUp(signUpCommand))
             .isInstanceOf(CoreException.class)
             .hasMessageContaining("생년월일을 포함할 수 없습니다");
     }
