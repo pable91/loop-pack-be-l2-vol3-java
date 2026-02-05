@@ -1,8 +1,8 @@
 package com.loopers.interfaces.api;
 
 import com.loopers.application.user.AuthUserPrincipal;
-import com.loopers.domain.UserModel;
-import com.loopers.domain.UserService;
+import com.loopers.domain.user.UserModel;
+import com.loopers.domain.user.UserService;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,8 +1,9 @@
-package com.loopers.domain;
+package com.loopers.domain.user;
 
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import jakarta.transaction.Transactional;
+import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,7 +16,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public UserModel createUser(String loginId, String rawPassword, java.time.LocalDate birthDate, String name, String email) {
+    public UserModel createUser(String loginId, String rawPassword, LocalDate birthDate, String name, String email) {
         String encodedPassword = passwordEncoder.encode(rawPassword);
         UserModel user = UserModel.create(loginId, encodedPassword, birthDate, name, email);
         return userRepository.save(user);
@@ -57,7 +58,7 @@ public class UserService {
         user.changePassword(newEncodedPassword);
     }
 
-    private void validatePasswordNotContainsBirthDate(String password, java.time.LocalDate birthDate) {
+    private void validatePasswordNotContainsBirthDate(String password, LocalDate birthDate) {
         String birthStr = birthDate.toString().replace("-", "");
         if (password.contains(birthStr)) {
             throw new CoreException(ErrorType.BAD_REQUEST, "비밀번호에 생년월일을 포함할 수 없습니다.");

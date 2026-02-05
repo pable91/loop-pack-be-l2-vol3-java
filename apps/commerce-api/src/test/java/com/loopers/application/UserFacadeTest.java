@@ -6,8 +6,10 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.loopers.domain.UserModel;
-import com.loopers.domain.UserService;
+import com.loopers.application.user.SignUpCommand;
+import com.loopers.application.user.UserFacade;
+import com.loopers.domain.user.UserModel;
+import com.loopers.domain.user.UserService;
 import com.loopers.support.error.CoreException;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;

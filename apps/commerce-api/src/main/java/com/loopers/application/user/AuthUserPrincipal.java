@@ -1,6 +1,6 @@
 package com.loopers.application.user;
 
-import com.loopers.domain.UserModel;
+import com.loopers.domain.user.UserModel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

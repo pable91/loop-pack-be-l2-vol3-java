@@ -1,6 +1,6 @@
 package com.loopers.infrastructure;
 
-import com.loopers.domain.UserModel;
+import com.loopers.domain.user.UserModel;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 

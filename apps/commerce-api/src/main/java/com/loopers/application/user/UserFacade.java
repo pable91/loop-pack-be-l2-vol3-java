@@ -1,7 +1,7 @@
 package com.loopers.application.user;
 
-import com.loopers.domain.UserModel;
-import com.loopers.domain.UserService;
+import com.loopers.domain.user.UserModel;
+import com.loopers.domain.user.UserService;
 import com.loopers.interfaces.user.ChangePasswordRequest;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
