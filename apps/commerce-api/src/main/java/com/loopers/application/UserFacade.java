@@ -17,7 +17,12 @@ public class UserFacade {
     private final UserService userService;
 
     public void signUp(SignUpCommand command) {
-        // 만약 또다른 검증 조건이 생긴다면, 클래스로 분리
+        if (userService.existsByEmail(command.getEmail())) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "이미 가입되어 있는 아이디 입니다.");
+        }
+
+        // TODO
+        // 만약 또다른 패스워드 검증 조건이 생기거나 다른 클래스에서도 같이 사용한다면 클래스로 분리해야함
         validatePasswordContent(command.getLoginPw(), command.getBirthDate());
 
         String encodedPw = passwordEncoder.encode(command.getLoginPw());

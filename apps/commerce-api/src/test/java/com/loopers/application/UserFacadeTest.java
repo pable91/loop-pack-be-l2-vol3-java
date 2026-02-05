@@ -70,4 +70,24 @@ public class UserFacadeTest {
             .isInstanceOf(CoreException.class)
             .hasMessageContaining("생년월일을 포함할 수 없습니다");
     }
+
+    @Test
+    @DisplayName("회원가입 실패 - 이미 가입되어 있으면 예외 발생")
+    void fail_already_signUp() {
+
+        String rawPw = "securePassword!@";
+        SignUpCommand signUpCommand = new SignUpCommand(
+            "user123",
+            rawPw,
+            LocalDate.of(1995, 1, 1),
+            "kim",
+            "yk@naver.com"
+        );
+
+        given(userService.existsByEmail("yk@naver.com")).willReturn(true);
+
+        assertThatThrownBy(() -> userFacade.signUp(signUpCommand))
+            .isInstanceOf(CoreException.class)
+            .hasMessageContaining("이미 가입되어 있는 아이디 입니다.");
+    }
 }

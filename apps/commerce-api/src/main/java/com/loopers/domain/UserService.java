@@ -14,4 +14,8 @@ public class UserService {
     public UserModel save(UserModel userModel) {
         return userRepository.save(userModel);
     }
+
+    public Boolean existsByEmail(String email) {
+        return true;
+    }
 }
