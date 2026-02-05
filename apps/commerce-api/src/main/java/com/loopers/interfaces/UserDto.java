@@ -1,6 +1,7 @@
 package com.loopers.interfaces;
 
 import com.loopers.application.UserInfo;
+import com.loopers.support.MaskingUtils;
 import java.time.LocalDate;
 
 public class UserDto {
@@ -18,7 +19,7 @@ public class UserDto {
         public static MyInfoResponse from(UserInfo userInfo) {
             return new MyInfoResponse(
                 userInfo.loginId(),
-                userInfo.name(),
+                MaskingUtils.maskLastCharacter(userInfo.name()),
                 userInfo.birthDate(),
                 userInfo.email()
             );
