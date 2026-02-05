@@ -334,6 +334,25 @@ class UserControllerTest {
         }
 
         @Test
+        @DisplayName("로그인 ID에 특수문자가 포함되면 400 Bad Request를 반환한다")
+        void fail_when_loginId_contains_special_character() throws Exception {
+            UsersSignUpRequestDto requestBody = new UsersSignUpRequestDto(
+                LocalDate.of(1991, 12, 3),
+                "김용권",
+                "yk@google.com"
+            );
+
+            String json = objectMapper.writeValueAsString(requestBody);
+
+            mockMvc.perform(post("/users")
+                    .contentType(APPLICATION_JSON)
+                    .header(LoopersHeaders.X_LOOPERS_LOGIN_ID, "kim!")
+                    .header(LoopersHeaders.X_LOOPERS_LOGIN_PW, "Password1!")
+                    .content(json))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
         @DisplayName("X-Loopers-LoginPw 헤더가 없으면 400 Bad Request를 반환한다")
         void fail_when_loginPw_header_missing() throws Exception {
             UsersSignUpRequestDto requestBody = new UsersSignUpRequestDto(
