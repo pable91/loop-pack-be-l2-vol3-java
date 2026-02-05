@@ -6,14 +6,12 @@ import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
 @AllArgsConstructor
 public class UserFacade {
 
-    private final PasswordEncoder passwordEncoder;
     private final UserService userService;
 
     public UserInfo signUp(SignUpCommand command) {
@@ -25,16 +23,20 @@ public class UserFacade {
         // 만약 또다른 패스워드 검증 조건이 생기거나 다른 클래스에서도 같이 사용한다면 클래스로 분리해야함
         validatePasswordContent(command.getLoginPw(), command.getBirthDate());
 
-        String encodedPw = passwordEncoder.encode(command.getLoginPw());
-
-        UserModel userModel = userService.save(
-            UserModel.create(
-                command,
-                encodedPw
-            )
+        UserModel userModel = userService.createUser(
+            command.getLoginId(),
+            command.getLoginPw(),
+            command.getBirthDate(),
+            command.getName(),
+            command.getEmail()
         );
 
         return UserInfo.from(userModel);
+    }
+
+    public UserInfo getMyInfo(Long userId) {
+        UserModel user = userService.findById(userId);
+        return UserInfo.from(user);
     }
 
     private void validatePasswordContent(String password, LocalDate birthDate) {

@@ -1,6 +1,5 @@
 package com.loopers.domain;
 
-import com.loopers.application.SignUpCommand;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import jakarta.persistence.Column;
@@ -70,13 +69,7 @@ public class UserModel extends BaseEntity {
         }
     }
 
-    public static UserModel create(SignUpCommand command, String encodedPw) {
-        return new UserModel(
-            command.getLoginId(),
-            encodedPw,
-            command.getBirthDate(),
-            command.getName(),
-            command.getEmail()
-        );
+    public static UserModel create(String loginId, String encodedPassword, LocalDate birthDate, String name, String email) {
+        return new UserModel(loginId, encodedPassword, birthDate, name, email);
     }
 }

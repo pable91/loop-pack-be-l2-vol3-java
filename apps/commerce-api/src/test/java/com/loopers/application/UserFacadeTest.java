@@ -1,7 +1,7 @@
 package com.loopers.application;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -16,16 +16,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 public class UserFacadeTest {
 
     @InjectMocks
     private UserFacade userFacade;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
 
     @Mock
     private UserService userService;
@@ -35,23 +31,22 @@ public class UserFacadeTest {
     void success_signup() {
 
         String rawPw = "securePassword!@";
-        String encodedPw = "encoded_hash";
+        LocalDate birthDate = LocalDate.of(1995, 1, 1);
         SignUpCommand signUpCommand = new SignUpCommand(
             "user123",
             rawPw,
-            LocalDate.of(1995, 1, 1),
+            birthDate,
             "kim",
             "yk@naver.com"
         );
 
-        given(passwordEncoder.encode(rawPw)).willReturn(encodedPw);
-        UserModel savedUser = UserModel.create(signUpCommand, encodedPw);
-        given(userService.save(any(UserModel.class))).willReturn(savedUser);
+        UserModel savedUser = UserModel.create("user123", "encoded_hash", birthDate, "kim", "yk@naver.com");
+        given(userService.createUser(eq("user123"), eq(rawPw), eq(birthDate), eq("kim"), eq("yk@naver.com")))
+            .willReturn(savedUser);
 
         userFacade.signUp(signUpCommand);
 
-        verify(passwordEncoder, times(1)).encode(rawPw);
-        verify(userService, times(1)).save(any(UserModel.class));
+        verify(userService, times(1)).createUser(eq("user123"), eq(rawPw), eq(birthDate), eq("kim"), eq("yk@naver.com"));
     }
 
     @Test

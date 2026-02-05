@@ -1,14 +1,17 @@
 package com.loopers.application;
 
 import com.loopers.domain.UserModel;
+import java.time.LocalDate;
 
-public record UserInfo(Long id, String name, String email) {
+public record UserInfo(Long id, String loginId, String name, String email, LocalDate birthDate) {
 
     public static UserInfo from(UserModel userModel) {
         return new UserInfo(
             userModel.getId(),
+            userModel.getLoginId(),
             userModel.getName(),
-            userModel.getEmail()
+            userModel.getEmail(),
+            userModel.getBirthDate()
         );
     }
 }

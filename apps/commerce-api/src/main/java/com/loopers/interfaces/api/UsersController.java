@@ -39,8 +39,8 @@ public class UsersController {
     }
 
     @GetMapping("/me")
-    public ApiResponse<UserDto.MyInfoResponse> getMe() {
-
-        return ApiResponse.success(UserDto.MyInfoResponse.mock());
+    public ApiResponse<UserDto.MyInfoResponse> getMe(@AuthUser AuthUserPrincipal authUser) {
+        UserInfo userInfo = userFacade.getMyInfo(authUser.getId());
+        return ApiResponse.success(UserDto.MyInfoResponse.from(userInfo));
     }
 }

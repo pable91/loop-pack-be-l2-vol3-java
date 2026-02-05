@@ -25,7 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.loopers.config.WebMvcConfig;
 
 @WebMvcTest(UsersController.class)
-@Import({WebMvcConfig.class, CredentialsHeadersArgumentResolver.class})
+@Import({WebMvcConfig.class, CredentialsHeadersArgumentResolver.class, AuthUserArgumentResolver.class})
 class UserControllerTest {
 
     @Autowired
@@ -49,7 +49,7 @@ class UserControllerTest {
             "yk@google.com"
         );
 
-        UserInfo userInfo = new UserInfo(1L, "김용권", "yk@google.com");
+        UserInfo userInfo = new UserInfo(1L, "kim", "김용권", "yk@google.com", LocalDate.of(1991, 12, 3));
         given(userFacade.signUp(any(SignUpCommand.class))).willReturn(userInfo);
 
         String json = objectMapper.writeValueAsString(requestBody);
