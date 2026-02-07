@@ -30,4 +30,9 @@ public class UserRepositoryImpl implements UserRepository {
     public Boolean existsByEmail(String email) {
         return userJpaRepository.existsByEmail(email);
     }
+
+    @Override
+    public Boolean existsByLoginId(String loginId) {
+        return userJpaRepository.existsByLoginId(loginId);
+    }
 }

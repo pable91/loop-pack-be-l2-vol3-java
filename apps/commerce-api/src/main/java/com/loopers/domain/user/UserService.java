@@ -17,6 +17,12 @@ public class UserService {
 
     @Transactional
     public UserModel createUser(String loginId, String rawPassword, LocalDate birthDate, String name, String email) {
+        if (userRepository.existsByLoginId(loginId)) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "이미 사용 중인 아이디입니다.");
+        }
+        if (userRepository.existsByEmail(email)) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "이미 가입된 이메일입니다.");
+        }
         validatePasswordNotContainsBirthDate(rawPassword, birthDate);
 
         String encodedPassword = passwordEncoder.encode(rawPassword);

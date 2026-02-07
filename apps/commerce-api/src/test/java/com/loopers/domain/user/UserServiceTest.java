@@ -47,6 +47,38 @@ class UserServiceTest {
                 .isInstanceOf(CoreException.class)
                 .hasMessageContaining("비밀번호에 생년월일을 포함할 수 없습니다");
         }
+
+        @Test
+        @DisplayName("이미 존재하는 이메일이면 예외가 발생한다")
+        void fail_when_email_already_exists() {
+            String loginId = "user123";
+            String rawPassword = "Password1!";
+            LocalDate birthDate = LocalDate.of(1991, 12, 3);
+            String name = "김용권";
+            String email = "yk@google.com";
+
+            given(userRepository.existsByEmail(email)).willReturn(true);
+
+            assertThatThrownBy(() -> userService.createUser(loginId, rawPassword, birthDate, name, email))
+                .isInstanceOf(CoreException.class)
+                .hasMessageContaining("이미 가입된 이메일입니다");
+        }
+
+        @Test
+        @DisplayName("이미 존재하는 로그인 아이디면 예외가 발생한다")
+        void fail_when_loginId_already_exists() {
+            String loginId = "user123";
+            String rawPassword = "Password1!";
+            LocalDate birthDate = LocalDate.of(1991, 12, 3);
+            String name = "김용권";
+            String email = "yk@google.com";
+
+            given(userRepository.existsByLoginId(loginId)).willReturn(true);
+
+            assertThatThrownBy(() -> userService.createUser(loginId, rawPassword, birthDate, name, email))
+                .isInstanceOf(CoreException.class)
+                .hasMessageContaining("이미 사용 중인 아이디입니다");
+        }
     }
 
     @DisplayName("비밀번호 변경")
