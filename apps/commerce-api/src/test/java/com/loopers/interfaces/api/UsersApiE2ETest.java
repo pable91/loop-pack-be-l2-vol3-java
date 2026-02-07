@@ -31,6 +31,7 @@ class UsersApiE2ETest {
 
     private static final String ENDPOINT_USERS = "/users";
     private static final String ENDPOINT_USERS_ME = "/users/me";
+    private static final String ENDPOINT_USERS_ME_PASSWORD = "/users/me/password";
 
     private final TestRestTemplate testRestTemplate;
     private final UserJpaRepository userJpaRepository;
@@ -198,6 +199,96 @@ class UsersApiE2ETest {
                 () -> assertThat(response.getBody().data().loginId()).isEqualTo(loginId),
                 () -> assertThat(response.getBody().data().email()).isEqualTo("test@google.com")
             );
+        }
+    }
+
+    @DisplayName("비밀번호 변경 테스트 (PATCH /users/me/password)")
+    @Nested
+    class ChangePassword {
+
+        @Test
+        @DisplayName("비밀번호 변경 성공 테스트")
+        void success() {
+            // arrange
+            String loginId = "testuser";
+            String currentPassword = "Password1!";
+            String newPassword = "NewPassword1!";
+            createUser(loginId, currentPassword, LocalDate.of(1991, 12, 3), "김용권", "test@google.com");
+
+            ChangePasswordRequest requestDto = new ChangePasswordRequest(currentPassword, newPassword);
+            HttpHeaders headers = createHeaders(loginId, currentPassword);
+            HttpEntity<ChangePasswordRequest> request = new HttpEntity<>(requestDto, headers);
+
+            // act
+            ParameterizedTypeReference<ApiResponse<Void>> responseType = new ParameterizedTypeReference<>() {};
+            ResponseEntity<ApiResponse<Void>> response =
+                testRestTemplate.exchange(ENDPOINT_USERS_ME_PASSWORD, HttpMethod.PATCH, request, responseType);
+
+            // assert
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        }
+
+        @Test
+        @DisplayName("현재 비밀번호가 틀리면 400 응답을 받는다")
+        void fail_when_current_password_not_match() {
+            // arrange
+            String loginId = "testuser";
+            String currentPassword = "Password1!";
+            createUser(loginId, currentPassword, LocalDate.of(1991, 12, 3), "김용권", "test@google.com");
+
+            ChangePasswordRequest requestDto = new ChangePasswordRequest("WrongPassword1!", "NewPassword1!");
+            HttpHeaders headers = createHeaders(loginId, currentPassword);
+            HttpEntity<ChangePasswordRequest> request = new HttpEntity<>(requestDto, headers);
+
+            // act
+            ParameterizedTypeReference<ApiResponse<Void>> responseType = new ParameterizedTypeReference<>() {};
+            ResponseEntity<ApiResponse<Void>> response =
+                testRestTemplate.exchange(ENDPOINT_USERS_ME_PASSWORD, HttpMethod.PATCH, request, responseType);
+
+            // assert
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        }
+
+        @Test
+        @DisplayName("새 비밀번호가 기존 비밀번호와 같으면 400 응답을 받는다")
+        void fail_when_new_password_same_as_current() {
+            // arrange
+            String loginId = "testuser";
+            String currentPassword = "Password1!";
+            createUser(loginId, currentPassword, LocalDate.of(1991, 12, 3), "김용권", "test@google.com");
+
+            ChangePasswordRequest requestDto = new ChangePasswordRequest(currentPassword, currentPassword);
+            HttpHeaders headers = createHeaders(loginId, currentPassword);
+            HttpEntity<ChangePasswordRequest> request = new HttpEntity<>(requestDto, headers);
+
+            // act
+            ParameterizedTypeReference<ApiResponse<Void>> responseType = new ParameterizedTypeReference<>() {};
+            ResponseEntity<ApiResponse<Void>> response =
+                testRestTemplate.exchange(ENDPOINT_USERS_ME_PASSWORD, HttpMethod.PATCH, request, responseType);
+
+            // assert
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        }
+
+        @Test
+        @DisplayName("새 비밀번호에 생년월일이 포함되면 400 응답을 받는다")
+        void fail_when_new_password_contains_birthDate() {
+            // arrange
+            String loginId = "testuser";
+            String currentPassword = "Password1!";
+            createUser(loginId, currentPassword, LocalDate.of(1991, 12, 3), "김용권", "test@google.com");
+
+            ChangePasswordRequest requestDto = new ChangePasswordRequest(currentPassword, "Pass19911203!");
+            HttpHeaders headers = createHeaders(loginId, currentPassword);
+            HttpEntity<ChangePasswordRequest> request = new HttpEntity<>(requestDto, headers);
+
+            // act
+            ParameterizedTypeReference<ApiResponse<Void>> responseType = new ParameterizedTypeReference<>() {};
+            ResponseEntity<ApiResponse<Void>> response =
+                testRestTemplate.exchange(ENDPOINT_USERS_ME_PASSWORD, HttpMethod.PATCH, request, responseType);
+
+            // assert
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         }
     }
 }
