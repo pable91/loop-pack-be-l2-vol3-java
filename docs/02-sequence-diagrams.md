@@ -74,7 +74,7 @@ sequenceDiagram
             Note over Facade: Break Loop
         else Conflict (Optimistic Lock)
             DB-->>P_Svc: 0 row affected
-            P_Svc-->>Facade: Lock Exception
+            P_Svc-->>Facade: Exception
             Facade->>Facade: [ TX Rollback ]
             Note over Facade: Wait & Retry
         end
