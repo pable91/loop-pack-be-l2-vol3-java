@@ -47,41 +47,41 @@ sequenceDiagram
 sequenceDiagram
     actor User as 사용자
     participant Ctrl as LikeController
-    participant Facade as OrderFacade (Retry)
+    participant Facade as LikeFacade
     participant P_Svc as ProductService
     participant L_Svc as LikeService
     participant DB as MySQL
 
     User->>Ctrl: 좋아요 클릭
-    Ctrl->>Facade: toggleLike(userId, productId)
+    Ctrl->>Facade: toggle(userId, productId)
 
-    loop 최대 3회 재시도 (Retry Loop)
-        Facade->>Facade: [ 트랜잭션 시작 ]
+    loop Retry (Max 3)
+        Facade->>Facade: [ TX Start ]
 
-        Facade->>P_Svc: getProduct(productId)
-        P_Svc->>DB: SELECT id, like_count, version FROM PRODUCT
-        DB-->>P_Svc: 상품 정보 (Version: 1) 반환
+        Facade->>P_Svc: get(productId)
+        P_Svc->>DB: SELECT id, like_count, version ...
+        DB-->>P_Svc: Product(v1)
 
-        Facade->>L_Svc: addLike(userId, productId)
-        L_Svc->>DB: INSERT INTO LIKE (Unique Key 체크)
+        Facade->>L_Svc: add(userId, productId)
+        L_Svc->>DB: INSERT LIKE (UK Check)
 
-        Facade->>P_Svc: increaseLikeCount(productId, version: 1)
-        P_Svc->>DB: UPDATE PRODUCT SET like_count=11, version=2 <br/> WHERE id=? AND version=1
+        Facade->>P_Svc: increase(productId, v1)
+        P_Svc->>DB: UPDATE ... SET version=2 WHERE version=1
 
-        alt 업데이트 성공 (Rows Affected = 1)
-            DB-->>P_Svc: 성공
-            Facade->>Facade: [ 트랜잭션 커밋 ]
-            Note over Facade: 루프 종료 (성공)
-        else 버전 충돌 (Rows Affected = 0)
-            DB-->>P_Svc: 실패 (OptimisticLockException)
-            P_Svc-->>Facade: 예외 발생
-            Facade->>Facade: [ 트랜잭션 롤백 ]
-            Note over Facade: 잠시 대기 후 재시도 결정
+        alt Success
+            DB-->>P_Svc: 1 row affected
+            Facade->>Facade: [ TX Commit ]
+            Note over Facade: Break Loop
+        else Conflict (Optimistic Lock)
+            DB-->>P_Svc: 0 row affected
+            P_Svc-->>Facade: Lock Exception
+            Facade->>Facade: [ TX Rollback ]
+            Note over Facade: Wait & Retry
         end
     end
 
-    Facade-->>Ctrl: 최종 결과 반환
-    Ctrl-->>User: 응답
+    Facade-->>Ctrl: Result
+    Ctrl-->>User: Response
 ```
 
 ### 3. 브랜드 삭제시 상품 일괄 삭제 시퀀스 다이어그램
@@ -94,18 +94,20 @@ sequenceDiagram
     participant B_Svc as BrandService
     participant P_Svc as ProductService
     participant DB as MySQL
-    Admin ->> Ctrl: 브랜드 삭제 요청 (brandId)
-    Ctrl ->> Facade: deleteBrand(brandId)
+
+    Admin ->> Ctrl: 브랜드 삭제 요청 (id)
+    Ctrl ->> Facade: delete(id)
     activate Facade
-    Note over Facade, DB: [ 트랜잭션 시작 ]
-%% 1. 브랜드 존재 확인 및 상태 변경
-    Facade ->> B_Svc: markBrandAsDeleted(brandId)
-    B_Svc ->> DB: UPDATE BRAND SET is_deleted = true WHERE id = ?
-%% 2. 연관된 상품들 일괄 상태 변경 (Soft Delete)
-    Facade ->> P_Svc: stopSellingProductsByBrand(brandId)
-    P_Svc ->> DB: UPDATE PRODUCT SET status = 'DELETED', is_deleted = true <br/> WHERE brand_id = ? AND is_deleted = false
-    Note over Facade, DB: [ 트랜잭션 커밋 ]
-    Facade -->> Ctrl: 삭제 완료 응답
+    Note over Facade, DB: [ Transaction Start ]
+
+    Facade ->> B_Svc: remove(id)
+    B_Svc ->> DB: UPDATE BRAND SET is_deleted = true ...
+
+    Facade ->> P_Svc: stopByBrand(id)
+    P_Svc ->> DB: UPDATE PRODUCT SET status = 'DELETED' ...
+
+    Note over Facade, DB: [ Transaction Commit ]
+    Facade -->> Ctrl: success
     deactivate Facade
-    Ctrl -->> Admin: 브랜드 및 관련 상품 삭제 완료 알림
+    Ctrl -->> Admin: 삭제 완료 알림
 ```
