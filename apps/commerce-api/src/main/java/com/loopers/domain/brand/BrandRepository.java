@@ -1,6 +1,10 @@
 package com.loopers.domain.brand;
 
+import java.util.Optional;
+
 public interface BrandRepository {
 
-    Brand save(Brand brand);
+    Brand create(Brand brand);
+    Brand update(Long id, Brand brand);
+    Optional<Brand> findById(Long id);
 }

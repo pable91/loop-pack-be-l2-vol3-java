@@ -1,6 +1,5 @@
 package com.loopers.domain.brand;
 
-import com.loopers.infrastructure.brand.BrandEntity;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import java.time.ZonedDateTime;
@@ -11,10 +10,6 @@ public record Brand(Long id, String name, String description, ZonedDateTime crea
         validateName(name);
 
         return new Brand(id, name, description, null);
-    }
-
-    public static Brand toDomain(BrandEntity brandEntity) {
-        return new Brand(brandEntity.getId(), brandEntity.getName(), brandEntity.getDescription(), brandEntity.getCreatedAt());
     }
 
     private static void validateName(String name) {
@@ -33,5 +28,16 @@ public record Brand(Long id, String name, String description, ZonedDateTime crea
 
     public String getDescription() {
         return description;
+    }
+
+    public Brand update(String name, String description) {
+        validateName(name);
+
+        return new Brand(
+            this.id,
+            name,
+            description,
+            this.createdAt
+        );
     }
 }

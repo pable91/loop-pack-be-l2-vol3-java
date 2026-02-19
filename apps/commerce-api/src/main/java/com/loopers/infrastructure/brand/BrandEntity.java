@@ -22,14 +22,21 @@ public class BrandEntity extends BaseEntity {
     private String description;
 
     private BrandEntity(String name, String description) {
-        super();
-
         this.name = name;
         this.description = description;
     }
 
-    public static BrandEntity toEntity(Brand brand) {
+    public static BrandEntity create(Brand brand) {
         return new BrandEntity(brand.getName(), brand.getDescription());
+    }
+
+    public static Brand toDomain(BrandEntity brandEntity) {
+        return new Brand(brandEntity.getId(), brandEntity.getName(), brandEntity.getDescription(), brandEntity.getCreatedAt());
+    }
+
+    public void update(Brand brand) {
+        this.name = brand.getName();
+        this.description = brand.getDescription();
     }
 
     public String getName() {
