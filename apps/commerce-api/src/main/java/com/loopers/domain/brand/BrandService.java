@@ -11,15 +11,15 @@ public class BrandService {
 
     private final BrandRepository brandRepository;
 
-    public void create(String name, String description) {
+    public Brand create(String name, String description) {
         Brand brand = Brand.create(null, name, description);
-        brandRepository.create(brand);
+        return  brandRepository.create(brand);
     }
 
-    public void update(Long id, String name, String description) {
+    public Brand update(Long id, String name, String description) {
         Brand existing = findById(id);
         Brand updated = existing.update(name, description);
-        brandRepository.update(id, updated);
+        return brandRepository.update(id, updated);
     }
 
     public Brand findById(Long id) {
