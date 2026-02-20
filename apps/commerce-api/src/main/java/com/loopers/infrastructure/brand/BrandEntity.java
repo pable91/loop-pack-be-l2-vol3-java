@@ -27,7 +27,10 @@ public class BrandEntity extends BaseEntity {
     }
 
     public static BrandEntity create(Brand brand) {
-        return new BrandEntity(brand.getName(), brand.getDescription());
+        return new BrandEntity(
+            brand.getName(),
+            brand.getDescription()
+        );
     }
 
     public static Brand toDomain(BrandEntity brandEntity) {

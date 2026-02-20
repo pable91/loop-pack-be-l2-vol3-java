@@ -47,7 +47,7 @@ class BrandServiceTest {
             .hasMessage("브랜드를 찾을 수 없습니다");
     }
 
-    //    @Test
+//        @Test
 //    void check_default_return() {
 //        Long id = 10L;
 //
@@ -55,5 +55,17 @@ class BrandServiceTest {
 //
 //        System.out.println("result: " + result);
 //        System.out.println("isPresent: " + result.isPresent());
+//    }
+
+//    @Test
+//    @DisplayName("BrandEntity를 생성할 때 ID 초기값을 확인한다")
+//    void check_entity_initial_id() {
+//        Brand brand = Brand.create(null, "테스트", "설명");
+//
+//        BrandEntity entity = BrandEntity.create(brand);
+//
+//        System.out.println("생성된 엔티티의 ID: " + entity.getId());
+//
+//        Assertions.assertThat(entity.getId()).isEqualTo(null);
 //    }
 }
