@@ -8,6 +8,9 @@ import jakarta.persistence.Table;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
 
+/**
+ *  Brand DB 엔티티
+ */
 @Entity
 @Table(name = "brand")
 @NoArgsConstructor
@@ -34,7 +37,7 @@ public class BrandEntity extends BaseEntity {
     }
 
     public static Brand toDomain(BrandEntity brandEntity) {
-        return new Brand(brandEntity.getId(), brandEntity.getName(), brandEntity.getDescription(), brandEntity.getCreatedAt());
+        return Brand.create(brandEntity.getId(), brandEntity.getName(), brandEntity.getDescription());
     }
 
     public void update(Brand brand) {

@@ -18,8 +18,8 @@ public class BrandService {
 
     public Brand update(Long id, String name, String description) {
         Brand existing = findById(id);
-        Brand updated = existing.update(name, description);
-        return brandRepository.update(id, updated);
+        existing.update(name, description);
+        return brandRepository.update(id, existing);
     }
 
     public Brand findById(Long id) {
