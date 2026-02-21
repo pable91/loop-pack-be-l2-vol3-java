@@ -26,10 +26,4 @@ public class BrandService {
         return brandRepository.findById(id)
             .orElseThrow(() -> new CoreException(ErrorType.BAD_REQUEST, "브랜드를 찾을 수 없습니다"));
     }
-
-    public void validateExists(Long id) {
-        if (!brandRepository.existsById(id)) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "브랜드를 찾을 수 없습니다");
-        }
-    }
 }

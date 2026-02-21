@@ -47,19 +47,8 @@ class BrandServiceTest {
             .hasMessage("브랜드를 찾을 수 없습니다");
     }
 
-    @Test
-    @DisplayName("브랜드 존재 검증 시 브랜드가 존재하지 않으면 예외를 던진다")
-    void fail_validateExists_not_found() {
-        Long id = 10L;
 
-        given(brandRepository.existsById(id)).willReturn(false);
-
-        Assertions.assertThatThrownBy(() -> brandService.validateExists(id))
-            .isInstanceOf(CoreException.class)
-            .hasMessage("브랜드를 찾을 수 없습니다");
-    }
-
-    //        @Test
+//    @Test
 //    void check_default_return() {
 //        Long id = 10L;
 //
