@@ -1,7 +1,8 @@
 package com.loopers.infrastructure.product;
 
-import jakarta.persistence.Column;
 import com.loopers.domain.BaseEntity;
+import com.loopers.domain.product.Product;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.NoArgsConstructor;
@@ -25,9 +26,45 @@ public class ProductEntity extends BaseEntity {
 
     @Comment("현재 판매가")
     @Column(name = "price", nullable = false)
-    private Long price;
+    private Integer price;
 
     @Comment("현재 재고")
     @Column(name = "stock", nullable = false)
     private Integer quantity;
+
+    public ProductEntity(Product product) {
+        this.name = product.getName();
+        this.refBrandId = product.getRefBrandId();
+        this.price = product.getPrice();
+    }
+
+    public static ProductEntity create(Product product) {
+        return new ProductEntity(product);
+    }
+
+    public static Product toDomain(ProductEntity productEntity) {
+        return Product.create(
+            productEntity.getId(),
+            productEntity.getName(),
+            productEntity.getRefBrandId(),
+            productEntity.getPrice(),
+            productEntity.getQuantity()
+        );
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Long getRefBrandId() {
+        return refBrandId;
+    }
+
+    public Integer getPrice() {
+        return price;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
 }

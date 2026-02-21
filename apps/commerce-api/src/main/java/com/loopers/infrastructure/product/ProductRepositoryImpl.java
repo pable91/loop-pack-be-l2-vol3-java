@@ -1,5 +1,6 @@
 package com.loopers.infrastructure.product;
 
+import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -9,4 +10,11 @@ import org.springframework.stereotype.Component;
 public class ProductRepositoryImpl implements ProductRepository {
 
     private final ProductJpaRepository productJpaRepository;
+
+    @Override
+    public Product save(Product product) {
+        ProductEntity productEntity = ProductEntity.create(product);
+
+        return ProductEntity.toDomain(productJpaRepository.save(productEntity));
+    }
 }
