@@ -22,9 +22,8 @@ public class BrandRepositoryImpl implements BrandRepository {
     }
 
     @Override
-    public Brand update(Long id, Brand brand) {
-
-        BrandEntity brandEntity = brandJpaRepository.findById(id)
+    public Brand update(Brand brand) {
+        BrandEntity brandEntity = brandJpaRepository.findById(brand.getId())
             .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "브랜드를 찾을 수 없습니다."));
         brandEntity.update(brand);
 

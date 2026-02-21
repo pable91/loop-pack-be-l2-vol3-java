@@ -17,9 +17,9 @@ public class BrandService {
     }
 
     public Brand update(Long id, String name, String description) {
-        Brand existing = findById(id);
-        existing.update(name, description);
-        return brandRepository.update(id, existing);
+        Brand brand = findById(id);
+        brand.update(name, description);
+        return brandRepository.update(brand);
     }
 
     public Brand findById(Long id) {
