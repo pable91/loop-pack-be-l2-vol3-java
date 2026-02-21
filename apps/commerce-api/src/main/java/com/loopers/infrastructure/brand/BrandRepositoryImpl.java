@@ -36,4 +36,9 @@ public class BrandRepositoryImpl implements BrandRepository {
         return brandJpaRepository.findById(id)
             .map(BrandEntity::toDomain);
     }
+
+    @Override
+    public boolean existsById(Long id) {
+        return brandJpaRepository.existsById(id);
+    }
 }
