@@ -67,4 +67,11 @@ public class ProductEntity extends BaseEntity {
     public Integer getQuantity() {
         return quantity;
     }
+
+    public void update(Product product) {
+        this.name = product.getName();
+        this.refBrandId = product.getRefBrandId();
+        this.price = product.getPrice();
+        this.quantity = product.getStock();
+    }
 }
