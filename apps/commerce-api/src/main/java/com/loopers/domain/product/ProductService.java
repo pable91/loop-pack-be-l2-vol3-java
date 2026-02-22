@@ -49,4 +49,11 @@ public class ProductService {
         return productRepository.findById(id)
             .orElseThrow(() -> new CoreException(ErrorType.BAD_REQUEST, "상품을 찾을 수 없습니다"));
     }
+
+    public List<Product> getProducts(ProductSearchCondition condition) {
+        if (condition.hasBrandId()) {
+            brandValidator.validateExists(condition.brandId());
+        }
+        return productRepository.findAll(condition);
+    }
 }
