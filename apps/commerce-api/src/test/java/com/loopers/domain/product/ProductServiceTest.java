@@ -30,7 +30,7 @@ class ProductServiceTest {
 
     @Test
     @DisplayName("상품 생성시 브랜드가 존재하지 않으면 예외를 던진다")
-    void fail_when_brand_not_found() {
+    void fail_createProducts_when_brand_not_found() {
         Long brandId = 999L;
         CreateProductRequest request = new CreateProductRequest("product1", 100000, 10);
         Map<Long, CreateProductRequest> command = Map.of(brandId, request);
@@ -45,7 +45,7 @@ class ProductServiceTest {
 
     @Test
     @DisplayName("상품 수량 감소시 상품이 존재하지 않으면, 예외를 던진다")
-    void fail_when_product_not_found() {
+    void fail_decreaseStock_when_product_not_found() {
         Long productId = 10101L;
         Integer decreaseStock = 100;
 
@@ -54,5 +54,19 @@ class ProductServiceTest {
         assertThatThrownBy(() ->  productService.decreaseStock(productId, decreaseStock))
             .isInstanceOf(CoreException.class)
             .hasMessage("상품을 찾을 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("상품 목록 페이징 조회시 브랜드가 존재하지 않으면, 예외를 던진다")
+    void fail_getProducts_when_brand_not_found() {
+        Long brandId = 999L;
+        ProductSearchCondition condition = ProductSearchCondition.of(brandId, ProductSortType.LATEST, 0, 10);
+
+        willThrow(new CoreException(ErrorType.BAD_REQUEST, "브랜드를 찾을 수 없습니다"))
+            .given(brandValidator).validateExists(brandId);
+
+        assertThatThrownBy(() -> productService.getProducts(condition))
+            .isInstanceOf(CoreException.class)
+            .hasMessage("브랜드를 찾을 수 없습니다");
     }
 }
