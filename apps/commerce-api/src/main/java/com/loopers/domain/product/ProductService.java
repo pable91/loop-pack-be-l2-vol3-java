@@ -38,10 +38,8 @@ public class ProductService {
     }
 
     public void decreaseStock(Long productId, Integer decreaseStock) {
-        // 상품이 존재해?
         Product product = findById(productId);
 
-        // 상품의 수량이 충분해? + 수량 감소
         product.decreaseStock(decreaseStock);
 
         productRepository.update(product);
