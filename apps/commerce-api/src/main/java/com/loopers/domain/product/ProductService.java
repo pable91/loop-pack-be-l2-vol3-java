@@ -55,6 +55,9 @@ public class ProductService {
     }
 
     public List<Product> getProducts(ProductSearchCondition condition) {
+        if (condition == null) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "검색 조건은 필수입니다");
+        }
         if (condition.hasBrandId()) {
             brandValidator.validateExists(condition.brandId());
         }

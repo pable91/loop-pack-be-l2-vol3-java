@@ -80,4 +80,12 @@ class ProductServiceTest {
             .isInstanceOf(CoreException.class)
             .hasMessage("브랜드를 찾을 수 없습니다");
     }
+
+    @Test
+    @DisplayName("상품 목록 조회시 검색 조건이 null이면, 예외를 던진다")
+    void fail_getProducts_when_condition_is_null() {
+        assertThatThrownBy(() -> productService.getProducts(null))
+            .isInstanceOf(CoreException.class)
+            .hasMessage("검색 조건은 필수입니다");
+    }
 }
