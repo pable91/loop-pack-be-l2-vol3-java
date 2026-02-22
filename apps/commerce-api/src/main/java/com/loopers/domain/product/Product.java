@@ -55,18 +55,22 @@ public class Product {
         }
     }
 
-    public boolean hasEnoughStock(int requiredQuantity) {
+    public boolean hasEnoughStock(Integer requiredQuantity) {
         return this.stock >= requiredQuantity;
     }
 
-    public void decreaseStock(int requiredQuantity) {
-        if (requiredQuantity <= 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "감소 수량은 양수여야 합니다");
-        }
-        if (!hasEnoughStock(requiredQuantity)) {
+    public void decreaseStock(Integer quantity) {
+        validateQuantity(quantity);
+        if (!hasEnoughStock(quantity)) {
             throw new CoreException(ErrorType.BAD_REQUEST, "재고가 부족합니다");
         }
-        this.stock -= requiredQuantity;
+        this.stock -= quantity;
+    }
+
+    private void validateQuantity(Integer quantity) {
+        if (quantity == null || quantity <= 0) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "수량은 양수여야 합니다");
+        }
     }
 
     public Long getId() {

@@ -18,6 +18,10 @@ public class ProductService {
     private final BrandValidator brandValidator;
 
     public List<Product> createProducts(Map<Long, CreateProductRequest> createProductsCommand) {
+        if (createProductsCommand == null || createProductsCommand.isEmpty()) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "상품 생성 요청은 필수입니다");
+        }
+
         createProductsCommand.keySet().forEach(brandValidator::validateExists);
 
         List<Product> createdProducts = new ArrayList<>();

@@ -12,6 +12,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -27,6 +29,15 @@ class ProductServiceTest {
 
     @Mock
     private ProductRepository productRepository;
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @DisplayName("상품 생성 요청이 null이거나 비어있으면, 예외를 던진다")
+    void fail_createProducts_when_command_is_null_or_empty(Map<Long, CreateProductRequest> command) {
+        assertThatThrownBy(() -> productService.createProducts(command))
+            .isInstanceOf(CoreException.class)
+            .hasMessage("상품 생성 요청은 필수입니다");
+    }
 
     @Test
     @DisplayName("상품 생성시 브랜드가 존재하지 않으면 예외를 던진다")
