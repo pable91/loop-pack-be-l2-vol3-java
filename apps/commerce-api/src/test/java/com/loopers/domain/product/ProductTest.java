@@ -119,4 +119,14 @@ public class ProductTest {
             .isInstanceOf(CoreException.class)
             .hasMessage("재고가 부족합니다");
     }
+
+    @DisplayName("재고 차감하려는 수량 파라미터가 양수가 아니면, 예외를 던진다")
+    @Test
+    void fail_decrease_stock_when_not_positive() {
+        Product product = Product.create(1L, "product1", 1L, 10000, 100);
+
+        assertThatThrownBy(() -> product.decreaseStock(-10))
+            .isInstanceOf(CoreException.class)
+            .hasMessage("감소 수량은 양수여야 합니다");
+    }
 }

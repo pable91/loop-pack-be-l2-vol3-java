@@ -60,6 +60,9 @@ public class Product {
     }
 
     public void decreaseStock(int requiredQuantity) {
+        if (requiredQuantity <= 0) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "감소 수량은 양수여야 합니다");
+        }
         if (!hasEnoughStock(requiredQuantity)) {
             throw new CoreException(ErrorType.BAD_REQUEST, "재고가 부족합니다");
         }
