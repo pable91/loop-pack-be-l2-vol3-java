@@ -12,6 +12,10 @@ public class LikeService {
     private final LikeRepository likeRepository;
 
     public Like like(Long productId, Long userId) {
+        if (likeRepository.existByUniqueId(productId, userId)) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "이미 좋아요를 누른 상품입니다");
+        }
+
         Like like = Like.create(null, productId, userId);
 
         return likeRepository.save(like);
