@@ -21,8 +21,9 @@ public class ProductTest {
         Long refBrandId = 105L;
         Integer price = 1000;
         Integer stock = 100;
+        Integer likeCount = 0;
 
-        Product product = Product.create(null, name, refBrandId, price, stock);
+        Product product = Product.create(null, name, refBrandId, price, stock, likeCount);
 
         assertThat(product).isNotNull();
         assertThat(product.getId()).isEqualTo(null);
@@ -30,6 +31,7 @@ public class ProductTest {
         assertThat(product.getRefBrandId()).isEqualTo(refBrandId);
         assertThat(product.getPrice()).isEqualTo(price);
         assertThat(product.getStock()).isEqualTo(stock);
+        assertThat(product.getLikeCount()).isEqualTo(likeCount);
     }
 
     @DisplayName("상품 이름이 유효하지 않다면, 생성시 예외를 던진다")
@@ -40,8 +42,9 @@ public class ProductTest {
         Long refBrandId = 105L;
         Integer price = 1000;
         Integer stock = 100;
+        Integer likeCount = 0;
 
-        assertThatThrownBy(() -> Product.create(null, name, refBrandId, price, stock))
+        assertThatThrownBy(() -> Product.create(null, name, refBrandId, price, stock, likeCount))
             .isInstanceOf(CoreException.class)
             .hasMessage("상품 이름은 필수 입니다");
     }
@@ -54,8 +57,9 @@ public class ProductTest {
         String name = "product1";
         Integer price = 1000;
         Integer stock = 100;
+        Integer likeCount = 0;
 
-        assertThatThrownBy(() -> Product.create(null, name, refBrandId, price, stock))
+        assertThatThrownBy(() -> Product.create(null, name, refBrandId, price, stock, likeCount))
             .isInstanceOf(CoreException.class)
             .hasMessage("브랜드FK는 null이거나 0이하가 될 수 없습니다");
     }
@@ -68,8 +72,9 @@ public class ProductTest {
         String name = "product1";
         Long refBrandId = 105L;
         Integer stock = 100;
+        Integer likeCount = 0;
 
-        assertThatThrownBy(() -> Product.create(null, name, refBrandId, price, stock))
+        assertThatThrownBy(() -> Product.create(null, name, refBrandId, price, stock, likeCount))
             .isInstanceOf(CoreException.class)
             .hasMessage("상품 가격은 null이거나 음수가 될 수 없습니다");
     }
@@ -82,10 +87,26 @@ public class ProductTest {
         String name = "product1";
         Long refBrandId = 105L;
         Integer price = 1000;
+        Integer likeCount = 0;
 
-        assertThatThrownBy(() -> Product.create(null, name, refBrandId, price, stock))
+        assertThatThrownBy(() -> Product.create(null, name, refBrandId, price, stock, likeCount))
             .isInstanceOf(CoreException.class)
             .hasMessage("상품 재고는 null이거나 음수가 될 수 없습니다");
+    }
+
+    @DisplayName("좋아요 수가 null이거나 0 미만이라면, 생성시 예외를 던진다")
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(ints = {-100, -1})
+    void fail_create_product_with_invalid_like_count(Integer likeCount) {
+        String name = "product1";
+        Long refBrandId = 105L;
+        Integer price = 1000;
+        Integer stock = 100;
+
+        assertThatThrownBy(() -> Product.create(null, name, refBrandId, price, stock, likeCount))
+            .isInstanceOf(CoreException.class)
+            .hasMessage("좋아요 수는 null이거나 음수가 될 수 없습니다");
     }
 
     @DisplayName("요청 수량보다 재고가 많으면 true, 재고가 적으면 false")
@@ -95,7 +116,7 @@ public class ProductTest {
         "1, 1000, false"
     })
     void validate_stock_by_required_quantity(int stock, int requiredQuantity, boolean expected) {
-        Product product = Product.create(null, "product1", 105L, 1000, stock);
+        Product product = Product.create(null, "product1", 105L, 1000, stock, 0);
 
         assertThat(product.hasEnoughStock(requiredQuantity)).isEqualTo(expected);
     }
@@ -103,7 +124,7 @@ public class ProductTest {
     @DisplayName("재고 차감에 성공하면, 재고가 요청 수량만큼 줄어든다")
     @Test
     void success_decrease_stock() {
-        Product product = Product.create(null, "product1", 105L, 1000, 100);
+        Product product = Product.create(null, "product1", 105L, 1000, 100, 0);
 
         product.decreaseStock(30);
 
@@ -113,7 +134,7 @@ public class ProductTest {
     @DisplayName("재고보다 많은 수량을 차감하면, 예외를 던진다")
     @Test
     void fail_decrease_stock_when_not_enough() {
-        Product product = Product.create(null, "product1", 105L, 1000, 10);
+        Product product = Product.create(null, "product1", 105L, 1000, 10, 0);
 
         assertThatThrownBy(() -> product.decreaseStock(100))
             .isInstanceOf(CoreException.class)
@@ -125,7 +146,7 @@ public class ProductTest {
     @NullSource
     @ValueSource(ints = {-10, -1, 0})
     void fail_decrease_stock_when_quantity_invalid(Integer quantity) {
-        Product product = Product.create(1L, "product1", 1L, 10000, 100);
+        Product product = Product.create(1L, "product1", 1L, 10000, 100, 0);
 
         assertThatThrownBy(() -> product.decreaseStock(quantity))
             .isInstanceOf(CoreException.class)

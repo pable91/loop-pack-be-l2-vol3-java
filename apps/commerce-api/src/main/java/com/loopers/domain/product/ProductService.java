@@ -32,7 +32,8 @@ public class ProductService {
                 request.name(),
                 brandId,
                 request.price(),
-                request.stock()
+                request.stock(),
+                0
             );
             Product savedProduct = productRepository.save(product);
             createdProducts.add(savedProduct);

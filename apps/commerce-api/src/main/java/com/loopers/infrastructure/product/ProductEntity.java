@@ -30,12 +30,17 @@ public class ProductEntity extends BaseEntity {
 
     @Comment("현재 재고")
     @Column(name = "stock", nullable = false)
-    private Integer quantity;
+    private Integer stock;
+
+    @Comment("좋아요 수")
+    @Column(name = "like_count", nullable = false)
+    private Integer likeCount;
 
     public ProductEntity(Product product) {
         this.name = product.getName();
         this.refBrandId = product.getRefBrandId();
         this.price = product.getPrice();
+        this.likeCount = product.getLikeCount();
     }
 
     public static ProductEntity create(Product product) {
@@ -48,8 +53,16 @@ public class ProductEntity extends BaseEntity {
             productEntity.getName(),
             productEntity.getRefBrandId(),
             productEntity.getPrice(),
-            productEntity.getQuantity()
+            productEntity.getStock(),
+            productEntity.getLikeCount()
         );
+    }
+
+    public void update(Product product) {
+        this.name = product.getName();
+        this.refBrandId = product.getRefBrandId();
+        this.price = product.getPrice();
+        this.stock = product.getStock();
     }
 
     public String getName() {
@@ -64,14 +77,11 @@ public class ProductEntity extends BaseEntity {
         return price;
     }
 
-    public Integer getQuantity() {
-        return quantity;
+    public Integer getStock() {
+        return stock;
     }
 
-    public void update(Product product) {
-        this.name = product.getName();
-        this.refBrandId = product.getRefBrandId();
-        this.price = product.getPrice();
-        this.quantity = product.getStock();
+    public Integer getLikeCount() {
+        return likeCount;
     }
 }

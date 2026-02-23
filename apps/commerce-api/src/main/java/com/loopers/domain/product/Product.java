@@ -9,26 +9,30 @@ import com.loopers.support.error.ErrorType;
 public class Product {
 
     private final Long id;
-    private final String name;
     private final Long refBrandId;
-    private final Integer price;
-    private Integer stock;
 
-    private Product(Long id, String name, Long refBrandId, Integer price, Integer stock) {
+    private String name;
+    private Integer price;
+    private Integer stock;
+    private Integer likeCount;
+
+    private Product(Long id, String name, Long refBrandId, Integer price, Integer stock, Integer likeCount) {
         this.id = id;
         this.name = name;
         this.refBrandId = refBrandId;
         this.price = price;
         this.stock = stock;
+        this.likeCount = likeCount;
     }
 
-    public static Product create(Long id, String name, Long refBrandId, Integer price, Integer stock) {
+    public static Product create(Long id, String name, Long refBrandId, Integer price, Integer stock,  Integer likeCount) {
         validateName(name);
         validateBrandId(refBrandId);
         validatePrice(price);
         validateStock(stock);
+        validateLike(likeCount);
 
-        return new Product(id, name, refBrandId, price, stock);
+        return new Product(id, name, refBrandId, price, stock, likeCount);
     }
 
     private static void validateName(String name) {
@@ -52,6 +56,12 @@ public class Product {
     private static void validateStock(Integer stock) {
         if (stock == null || stock < 0) {
             throw new CoreException(ErrorType.BAD_REQUEST, "상품 재고는 null이거나 음수가 될 수 없습니다");
+        }
+    }
+
+    private static void validateLike(Integer likeCount) {
+        if (likeCount == null || likeCount < 0) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "좋아요 수는 null이거나 음수가 될 수 없습니다");
         }
     }
 
@@ -92,4 +102,6 @@ public class Product {
     public Integer getStock() {
         return stock;
     }
+
+    public Integer getLikeCount() { return likeCount; }
 }
