@@ -1,5 +1,6 @@
 package com.loopers.application.product;
 
+import com.loopers.domain.brand.Brand;
 import com.loopers.domain.brand.BrandService;
 import com.loopers.domain.product.CreateProductRequest;
 import com.loopers.domain.product.Product;
@@ -22,6 +23,13 @@ public class ProductFacade {
     public List<Product> createProducts(Map<Long, CreateProductRequest> command) {
         command.keySet().forEach(brandService::findById);
         return productService.createProducts(command);
+    }
+
+    @Transactional(readOnly = true)
+    public ProductInfo getProduct(Long productId) {
+        Product product = productService.findById(productId);
+        Brand brand = brandService.findById(product.getRefBrandId());
+        return ProductInfo.of(product, brand);
     }
 
     @Transactional(readOnly = true)
