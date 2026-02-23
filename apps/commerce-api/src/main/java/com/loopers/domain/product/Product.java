@@ -77,6 +77,17 @@ public class Product {
         this.stock -= quantity;
     }
 
+    public void increaseLikeCount() {
+        this.likeCount += 1;
+    }
+
+    public void decreaseLikeCount() {
+        if(this.likeCount <= 0) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "좋아요 갯수는 음수가 될 수 없습니다");
+        }
+        this.likeCount -= 1;
+    }
+
     private void validateQuantity(Integer quantity) {
         if (quantity == null || quantity <= 0) {
             throw new CoreException(ErrorType.BAD_REQUEST, "수량은 양수여야 합니다");

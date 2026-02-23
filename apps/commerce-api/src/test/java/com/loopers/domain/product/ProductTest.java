@@ -158,4 +158,38 @@ public class ProductTest {
             assertCoreException(() -> product.decreaseStock(quantity), "수량은 양수여야 합니다");
         }
     }
+
+    @Nested
+    @DisplayName("좋아요 수 변경")
+    class LikeCount {
+
+        @DisplayName("좋아요 수 증가 성공")
+        @Test
+        void success_increase() {
+            Product product = createProduct(null, DEFAULT_NAME, DEFAULT_REF_BRAND_ID, DEFAULT_PRICE, DEFAULT_STOCK, 5);
+
+            product.increaseLikeCount();
+
+            assertThat(product.getLikeCount()).isEqualTo(6);
+        }
+
+        @DisplayName("좋아요 수 감소 성공")
+        @Test
+        void success_decrease() {
+            Product product = createProduct(null, DEFAULT_NAME, DEFAULT_REF_BRAND_ID, DEFAULT_PRICE, DEFAULT_STOCK, 5);
+
+            product.decreaseLikeCount();
+
+            assertThat(product.getLikeCount()).isEqualTo(4);
+        }
+
+        @DisplayName("좋아요 수가 0일 때 감소하면, 예외를 던진다")
+        @Test
+        void fail_decrease_when_like_count_is_zero() {
+            Product product = createProduct(null, DEFAULT_NAME, DEFAULT_REF_BRAND_ID, DEFAULT_PRICE, DEFAULT_STOCK, 0);
+
+            assertCoreException(() -> product.decreaseLikeCount(), "좋아요 갯수는 음수가 될 수 없습니다");
+        }
+    }
+
 }
