@@ -36,4 +36,16 @@ class BrandTest {
             .isInstanceOf(CoreException.class)
             .hasMessage("브랜드 이름은 필수 입니다");
     }
+
+    @DisplayName("브랜드 이름이 유효하지 않다면, 수정시 예외를 던진다")
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "   "})
+    void fail_update_brand_with_invalid_name(String name) {
+        Brand brand = Brand.create(null, "brand1", "description1");
+
+        Assertions.assertThatThrownBy(() -> brand.update(name, "description2"))
+            .isInstanceOf(CoreException.class)
+            .hasMessage("브랜드 이름은 필수 입니다");
+    }
 }
