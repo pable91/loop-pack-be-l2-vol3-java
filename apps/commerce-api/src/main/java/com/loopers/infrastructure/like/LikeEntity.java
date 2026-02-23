@@ -1,13 +1,16 @@
 package com.loopers.infrastructure.like;
 
 import com.loopers.domain.BaseEntity;
+import com.loopers.domain.like.Like;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
 
 @Entity
 @Table(name = "like")
+@NoArgsConstructor
 public class LikeEntity extends BaseEntity {
 
     @Comment("상품 id (ref)")
@@ -18,11 +21,28 @@ public class LikeEntity extends BaseEntity {
     @Column(name = "ref_user_id", nullable = false)
     private Long refUserId;
 
+    public LikeEntity(Like like) {
+        this.refProductId = like.getRefProductId();
+        this.refUserId = like.getRefUserId();
+    }
+
+    public static LikeEntity toEntity(Like like) {
+        return new LikeEntity(like);
+    }
+
     public Long getRefProductId() {
         return refProductId;
     }
 
     public Long getRefUserId() {
         return refUserId;
+    }
+
+    public static Like toDomain(LikeEntity likeEntity) {
+        return Like.create(
+            likeEntity.getId(),
+            likeEntity.getRefProductId(),
+            likeEntity.getRefUserId()
+        );
     }
 }

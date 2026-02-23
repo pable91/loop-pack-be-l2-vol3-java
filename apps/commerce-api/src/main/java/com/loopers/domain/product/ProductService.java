@@ -42,6 +42,18 @@ public class ProductService {
         return createdProducts;
     }
 
+    public void increaseLikeCount(Long productId) {
+        Product product = findById(productId);
+        product.increaseLikeCount();
+        productRepository.update(product);
+    }
+
+    public void decreaseLikeCount(Long productId) {
+        Product product = findById(productId);
+        product.decreaseLikeCount();
+        productRepository.update(product);
+    }
+
     public void decreaseStock(Long productId, Integer decreaseStock) {
         Product product = findById(productId);
 
