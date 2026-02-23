@@ -1,6 +1,5 @@
 package com.loopers.domain.product;
 
-import com.loopers.domain.brand.BrandValidator;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import java.util.ArrayList;
@@ -15,14 +14,10 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
-    private final BrandValidator brandValidator;
-
     public List<Product> createProducts(Map<Long, CreateProductRequest> createProductsCommand) {
         if (createProductsCommand == null || createProductsCommand.isEmpty()) {
             throw new CoreException(ErrorType.BAD_REQUEST, "상품 생성 요청은 필수입니다");
         }
-
-        createProductsCommand.keySet().forEach(brandValidator::validateExists);
 
         List<Product> createdProducts = new ArrayList<>();
 
@@ -56,9 +51,7 @@ public class ProductService {
 
     public void decreaseStock(Long productId, Integer decreaseStock) {
         Product product = findById(productId);
-
         product.decreaseStock(decreaseStock);
-
         productRepository.update(product);
     }
 
@@ -70,9 +63,6 @@ public class ProductService {
     public List<Product> getProducts(ProductSearchCondition condition) {
         if (condition == null) {
             throw new CoreException(ErrorType.BAD_REQUEST, "검색 조건은 필수입니다");
-        }
-        if (condition.hasBrandId()) {
-            brandValidator.validateExists(condition.brandId());
         }
         return productRepository.findAll(condition);
     }

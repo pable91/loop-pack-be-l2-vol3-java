@@ -2,11 +2,8 @@ package com.loopers.domain.product;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willThrow;
 
-import com.loopers.domain.brand.BrandValidator;
 import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -26,9 +23,6 @@ class ProductServiceTest {
     private ProductService productService;
 
     @Mock
-    private BrandValidator brandValidator;
-
-    @Mock
     private ProductRepository productRepository;
 
     @Nested
@@ -42,21 +36,6 @@ class ProductServiceTest {
             assertThatThrownBy(() -> productService.createProducts(command))
                 .isInstanceOf(CoreException.class)
                 .hasMessage("상품 생성 요청은 필수입니다");
-        }
-
-        @Test
-        @DisplayName("상품 생성시 브랜드가 존재하지 않으면 예외를 던진다")
-        void fail_when_brand_not_found() {
-            Long brandId = 999L;
-            CreateProductRequest request = new CreateProductRequest("product1", 100000, 10);
-            Map<Long, CreateProductRequest> command = Map.of(brandId, request);
-
-            willThrow(new CoreException(ErrorType.BAD_REQUEST, "브랜드를 찾을 수 없습니다"))
-                .given(brandValidator).validateExists(brandId);
-
-            assertThatThrownBy(() -> productService.createProducts(command))
-                .isInstanceOf(CoreException.class)
-                .hasMessage("브랜드를 찾을 수 없습니다");
         }
     }
 
@@ -81,20 +60,6 @@ class ProductServiceTest {
     @Nested
     @DisplayName("상품 목록 조회")
     class GetProducts {
-
-        @Test
-        @DisplayName("브랜드가 존재하지 않으면, 예외를 던진다")
-        void fail_when_brand_not_found() {
-            Long brandId = 999L;
-            ProductSearchCondition condition = ProductSearchCondition.of(brandId, ProductSortType.LATEST, 0, 10);
-
-            willThrow(new CoreException(ErrorType.BAD_REQUEST, "브랜드를 찾을 수 없습니다"))
-                .given(brandValidator).validateExists(brandId);
-
-            assertThatThrownBy(() -> productService.getProducts(condition))
-                .isInstanceOf(CoreException.class)
-                .hasMessage("브랜드를 찾을 수 없습니다");
-        }
 
         @Test
         @DisplayName("검색 조건이 null이면, 예외를 던진다")

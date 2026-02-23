@@ -25,7 +25,7 @@ public class Product {
         this.likeCount = likeCount;
     }
 
-    public static Product create(Long id, String name, Long refBrandId, Integer price, Integer stock,  Integer likeCount) {
+    public static Product create(Long id, String name, Long refBrandId, Integer price, Integer stock, Integer likeCount) {
         validateName(name);
         validateBrandId(refBrandId);
         validatePrice(price);
