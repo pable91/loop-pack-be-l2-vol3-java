@@ -8,6 +8,9 @@ import jakarta.persistence.Table;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
 
+/**
+ *  좋아요 DB 엔티티
+ */
 @Entity
 @Table(name = "like")
 @NoArgsConstructor

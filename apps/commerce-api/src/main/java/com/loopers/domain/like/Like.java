@@ -3,6 +3,9 @@ package com.loopers.domain.like;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 
+/**
+ *  좋아요 도메인 객체
+ */
 public class Like {
 
     private Long id;

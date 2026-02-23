@@ -5,7 +5,7 @@ import com.loopers.support.error.ErrorType;
 import java.time.ZonedDateTime;
 
 /**
- *  Brand 도메인
+ *  브랜드 도메인 객체
  */
 public class Brand {
 

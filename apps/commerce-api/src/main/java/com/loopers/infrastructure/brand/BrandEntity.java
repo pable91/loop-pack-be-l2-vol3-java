@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
 
 /**
- *  Brand DB 엔티티
+ *  브랜드 DB 엔티티
  */
 @Entity
 @Table(name = "brand")
