@@ -7,14 +7,14 @@ import java.time.ZonedDateTime;
 /**
  * OrderStatusHistory 도메인
  */
-public record OrderStatusHistory(Long id, Long refOrderId, OrderStatus fromStatus, OrderStatus toStatus, ZonedDateTime changedAt) {
+public record OrderStatusHistory(Long id, Long refOrderId, OrderStatus status, ZonedDateTime changedAt) {
 
-    public static OrderStatusHistory create(Long id, Long refOrderId, OrderStatus fromStatus, OrderStatus toStatus, ZonedDateTime changedAt) {
+    public static OrderStatusHistory create(Long id, Long refOrderId, OrderStatus status, ZonedDateTime changedAt) {
         validateRefOrderId(refOrderId);
-        validateToStatus(toStatus);
+        validateStatus(status);
         validateChangedAt(changedAt);
 
-        return new OrderStatusHistory(id, refOrderId, fromStatus, toStatus, changedAt);
+        return new OrderStatusHistory(id, refOrderId, status, changedAt);
     }
 
     private static void validateRefOrderId(Long refOrderId) {
@@ -23,15 +23,15 @@ public record OrderStatusHistory(Long id, Long refOrderId, OrderStatus fromStatu
         }
     }
 
-    private static void validateToStatus(OrderStatus toStatus) {
-        if (toStatus == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "변경 후 상태는 필수입니다");
+    private static void validateStatus(OrderStatus status) {
+        if (status == null) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "주문 상태는 필수입니다");
         }
     }
 
     private static void validateChangedAt(ZonedDateTime changedAt) {
         if (changedAt == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "상태 변경 일시는 필수입니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, "주문 상태 변경 일시는 필수입니다");
         }
     }
 }
