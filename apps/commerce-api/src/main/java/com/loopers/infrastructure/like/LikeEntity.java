@@ -17,11 +17,11 @@ import org.hibernate.annotations.Comment;
 public class LikeEntity extends BaseEntity {
 
     @Comment("상품 id (ref)")
-    @Column(name = "ref_product_id", nullable = false)
+    @Column(name = "ref_product_id", nullable = false, updatable = false)
     private Long refProductId;
 
     @Comment("유저 id (ref)")
-    @Column(name = "ref_user_id", nullable = false)
+    @Column(name = "ref_user_id", nullable = false, updatable = false)
     private Long refUserId;
 
     public LikeEntity(Like like) {

@@ -21,7 +21,7 @@ public class ProductEntity extends BaseEntity {
     private String name;
 
     @Comment("브랜드 id (ref)")
-    @Column(name = "ref_brand_id", nullable = false)
+    @Column(name = "ref_brand_id", nullable = false, updatable = false)
     private Long refBrandId;
 
     @Comment("현재 판매가")
