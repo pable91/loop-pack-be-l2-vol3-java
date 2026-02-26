@@ -71,8 +71,7 @@ public class ProductRepositoryImpl implements ProductRepository {
         return switch (sortType) {
             case LATEST -> productEntity.createdAt.desc();
             case PRICE_ASC -> productEntity.price.asc();
-//            case LIKES_DESC -> productEntity.createdAt.desc();
-            case LIKES_DESC -> null;
+            case LIKES_DESC -> productEntity.likeCount.desc();
         };
     }
 }
