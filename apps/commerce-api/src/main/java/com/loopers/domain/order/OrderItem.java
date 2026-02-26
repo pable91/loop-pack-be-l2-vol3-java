@@ -40,4 +40,8 @@ public record OrderItem(Long id, Long refOrderId, Long refProductId, Integer qua
             throw new CoreException(ErrorType.BAD_REQUEST, "주문 금액은 null이거나 음수가 될 수 없습니다");
         }
     }
+
+    public static int calculateSubtotal(int unitPrice, int quantity) {
+        return unitPrice * quantity;
+    }
 }
