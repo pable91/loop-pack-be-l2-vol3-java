@@ -60,6 +60,17 @@ public class ProductService {
             .orElseThrow(() -> new CoreException(ErrorType.BAD_REQUEST, "상품을 찾을 수 없습니다"));
     }
 
+    public List<Product> findByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "상품 ID 목록은 필수입니다");
+        }
+        List<Product> products = productRepository.findByIds(ids);
+        if (products.size() != ids.size()) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "존재하지 않는 상품이 포함되어 있습니다");
+        }
+        return products;
+    }
+
     public List<Product> getProducts(ProductSearchCondition condition) {
         if (condition == null) {
             throw new CoreException(ErrorType.BAD_REQUEST, "검색 조건은 필수입니다");

@@ -36,6 +36,13 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
+    public List<Product> findByIds(List<Long> ids) {
+        return productJpaRepository.findAllById(ids).stream()
+            .map(ProductEntity::toDomain)
+            .toList();
+    }
+
+    @Override
     public Product update(Product product) {
         ProductEntity productEntity = productJpaRepository.findById(product.getId())
             .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "상품을 찾을 수 없습니다."));
