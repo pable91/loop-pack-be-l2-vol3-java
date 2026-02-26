@@ -3,6 +3,7 @@ package com.loopers.infrastructure.brand;
 import com.loopers.domain.brand.Brand;
 import com.loopers.domain.brand.BrandRepository;
 import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorMessage;
 import com.loopers.support.error.ErrorType;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ public class BrandRepositoryImpl implements BrandRepository {
     @Override
     public Brand update(Brand brand) {
         BrandEntity brandEntity = brandJpaRepository.findById(brand.getId())
-            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "브랜드를 찾을 수 없습니다."));
+            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, ErrorMessage.Brand.BRAND_NOT_FOUND));
         brandEntity.update(brand);
 
         return BrandEntity.toDomain(brandJpaRepository.save(brandEntity));

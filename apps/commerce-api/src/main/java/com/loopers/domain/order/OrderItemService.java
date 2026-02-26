@@ -2,6 +2,7 @@ package com.loopers.domain.order;
 
 import com.loopers.domain.product.Product;
 import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorMessage;
 import com.loopers.support.error.ErrorType;
 import java.util.List;
 import java.util.Map;
@@ -16,10 +17,10 @@ public class OrderItemService {
 
     public void createOrderItems(Long orderId, List<Product> products, Map<Long, Integer> productQuantities) {
         if (products == null || products.isEmpty()) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "주문할 상품이 없습니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Order.ORDER_ITEMS_EMPTY);
         }
         if (productQuantities == null || productQuantities.isEmpty()) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "주문 수량 정보가 없습니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Order.ORDER_QUANTITIES_EMPTY);
         }
 
         List<OrderItem> orderItems = products.stream()

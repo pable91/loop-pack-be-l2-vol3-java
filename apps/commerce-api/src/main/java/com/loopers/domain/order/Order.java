@@ -1,6 +1,7 @@
 package com.loopers.domain.order;
 
 import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorMessage;
 import com.loopers.support.error.ErrorType;
 import java.time.ZonedDateTime;
 
@@ -34,25 +35,25 @@ public class Order {
 
     private static void validateRefUserId(Long refUserId) {
         if (refUserId == null || refUserId <= 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "유저FK는 null이거나 0이하가 될 수 없습니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Order.USER_ID_INVALID);
         }
     }
 
     private static void validateTotalPrice(Integer totalPrice) {
         if (totalPrice == null || totalPrice < 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "총 주문 금액은 null이거나 음수가 될 수 없습니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Order.TOTAL_ORDER_AMOUNT_INVALID);
         }
     }
 
     private static void validateOrderDt(ZonedDateTime orderDt) {
         if (orderDt == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "주문 일시는 필수입니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Order.ORDER_DT_REQUIRED);
         }
     }
 
     public void cancel() {
         if (this.status != OrderStatus.ORDERED) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "주문 완료 상태에서만 취소할 수 있습니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Order.CANCEL_ONLY_WHEN_COMPLETED);
         }
         this.status = OrderStatus.CANCELLED;
     }

@@ -1,6 +1,7 @@
 package com.loopers.domain.product;
 
 import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorMessage;
 import com.loopers.support.error.ErrorType;
 
 /**
@@ -37,31 +38,31 @@ public class Product {
 
     private static void validateName(String name) {
         if (name == null || name.isBlank()) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "상품 이름은 필수 입니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Product.PRODUCT_NAME_REQUIRED);
         }
     }
 
     private static void validateBrandId(Long refBrand) {
         if (refBrand == null || refBrand <= 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "브랜드FK는 null이거나 0이하가 될 수 없습니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Product.BRAND_ID_INVALID);
         }
     }
 
     private static void validatePrice(Integer price) {
         if (price == null || price < 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "상품 가격은 null이거나 음수가 될 수 없습니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Product.PRICE_INVALID);
         }
     }
 
     private static void validateStock(Integer stock) {
         if (stock == null || stock < 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "상품 재고는 null이거나 음수가 될 수 없습니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Product.STOCK_INVALID);
         }
     }
 
     private static void validateLike(Integer likeCount) {
         if (likeCount == null || likeCount < 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "좋아요 수는 null이거나 음수가 될 수 없습니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Product.LIKE_COUNT_INVALID);
         }
     }
 
@@ -72,7 +73,7 @@ public class Product {
     public void decreaseStock(Integer quantity) {
         validateQuantity(quantity);
         if (!hasEnoughStock(quantity)) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "재고가 부족합니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Product.INSUFFICIENT_STOCK);
         }
         this.stock -= quantity;
     }
@@ -83,14 +84,14 @@ public class Product {
 
     public void decreaseLikeCount() {
         if(this.likeCount <= 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "좋아요 갯수는 음수가 될 수 없습니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Product.LIKE_COUNT_NEGATIVE);
         }
         this.likeCount -= 1;
     }
 
     private void validateQuantity(Integer quantity) {
         if (quantity == null || quantity <= 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "수량은 양수여야 합니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Product.QUANTITY_MUST_BE_POSITIVE);
         }
     }
 

@@ -1,6 +1,7 @@
 package com.loopers.domain.product;
 
 import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorMessage;
 import com.loopers.support.error.ErrorType;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +17,7 @@ public class ProductService {
 
     public List<Product> createProducts(Map<Long, CreateProductRequest> createProductsCommand) {
         if (createProductsCommand == null || createProductsCommand.isEmpty()) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "상품 생성 요청은 필수입니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Product.CREATE_PRODUCT_REQUEST_REQUIRED);
         }
 
         List<Product> createdProducts = new ArrayList<>();
@@ -57,23 +58,23 @@ public class ProductService {
 
     public Product getById(Long id) {
         return productRepository.findById(id)
-            .orElseThrow(() -> new CoreException(ErrorType.BAD_REQUEST, "상품을 찾을 수 없습니다"));
+            .orElseThrow(() -> new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Product.PRODUCT_NOT_FOUND));
     }
 
     public List<Product> getByIds(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "상품 ID 목록은 필수입니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Product.PRODUCT_ID_LIST_REQUIRED);
         }
         List<Product> products = productRepository.findByIds(ids);
         if (products.size() != ids.size()) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "존재하지 않는 상품이 포함되어 있습니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Product.PRODUCT_ID_LIST_CONTAINS_INVALID);
         }
         return products;
     }
 
     public List<Product> findProducts(ProductSearchCondition condition) {
         if (condition == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "검색 조건은 필수입니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Product.SEARCH_CONDITION_REQUIRED);
         }
         return productRepository.findAll(condition);
     }

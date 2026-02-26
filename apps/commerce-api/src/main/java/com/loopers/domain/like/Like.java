@@ -1,6 +1,7 @@
 package com.loopers.domain.like;
 
 import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorMessage;
 import com.loopers.support.error.ErrorType;
 
 /**
@@ -26,11 +27,11 @@ public class Like {
 
     private static void validateRefId(Long refProductId, Long refUserId) {
         if (refProductId == null || refProductId < 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "상품FK는 null이거나 음수가 될 수 없습니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Like.PRODUCT_ID_INVALID);
         }
 
         if (refUserId == null || refUserId < 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "유저FK는 null이거나 음수가 될 수 없습니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Like.USER_ID_INVALID);
         }
     }
 

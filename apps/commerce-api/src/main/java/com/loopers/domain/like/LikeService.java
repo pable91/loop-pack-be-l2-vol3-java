@@ -1,6 +1,7 @@
 package com.loopers.domain.like;
 
 import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorMessage;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,7 @@ public class LikeService {
 
     public Like like(Long productId, Long userId) {
         if (likeRepository.existByUniqueId(productId, userId)) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "이미 좋아요를 누른 상품입니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Like.ALREADY_LIKED);
         }
 
         Like like = Like.create(null, productId, userId);
@@ -33,6 +34,6 @@ public class LikeService {
 
     public Like findByUniqueId(Long productId, Long userId) {
         return likeRepository.findByUniqueId(productId, userId)
-            .orElseThrow(() -> new CoreException(ErrorType.BAD_REQUEST, "좋아요 객체를 찾을 수 없습니다"));
+            .orElseThrow(() -> new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Like.LIKE_NOT_FOUND));
     }
 }

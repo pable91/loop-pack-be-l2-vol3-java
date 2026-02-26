@@ -1,8 +1,8 @@
 package com.loopers.domain.brand;
 
 import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorMessage;
 import com.loopers.support.error.ErrorType;
-import java.time.ZonedDateTime;
 
 /**
  *  브랜드 도메인 객체
@@ -27,7 +27,7 @@ public class Brand {
 
     private static void validateName(String name) {
         if (name == null || name.isBlank()) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "브랜드 이름은 필수 입니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Brand.BRAND_NAME_REQUIRED);
         }
     }
 

@@ -1,6 +1,7 @@
 package com.loopers.domain.brand;
 
 import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorMessage;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,6 @@ public class BrandService {
 
     public Brand getById(Long id) {
         return brandRepository.findById(id)
-            .orElseThrow(() -> new CoreException(ErrorType.BAD_REQUEST, "브랜드를 찾을 수 없습니다"));
+            .orElseThrow(() -> new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Brand.BRAND_NOT_FOUND));
     }
 }
