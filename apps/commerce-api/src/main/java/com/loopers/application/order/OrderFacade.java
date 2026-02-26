@@ -8,7 +8,6 @@ import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductService;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,19 +22,21 @@ public class OrderFacade {
     private final OrderItemService orderItemService;
     private final OrderStatusHistoryService orderStatusHistoryService;
 
-    public void order(Long userId, Map<Long, Integer> productQuantities) {
-        List<Long> productIds = new ArrayList<>(productQuantities.keySet());
+    public OrderInfo order(OrderCommand command) {
+        List<Long> productIds = new ArrayList<>(command.productQuantities().keySet());
         List<Product> products = productService.getByIds(productIds);
 
         products.forEach(product ->
-            productService.decreaseStock(product.getId(), productQuantities.get(product.getId())));
+            productService.decreaseStock(product.getId(), command.productQuantities().get(product.getId())));
 
-        int totalPrice = orderItemService.calculateTotalPrice(products, productQuantities);
+        int totalPrice = orderItemService.calculateTotalPrice(products, command.productQuantities());
 
-        var order = orderService.createOrder(userId, totalPrice);
+        var order = orderService.createOrder(command.userId(), totalPrice);
 
-        orderItemService.createOrderItems(order.getId(), products, productQuantities);
+        orderItemService.createOrderItems(order.getId(), products, command.productQuantities());
 
         orderStatusHistoryService.recordHistory(order.getId(), OrderStatus.ORDERED);
+
+        return OrderInfo.from(order);
     }
 }
