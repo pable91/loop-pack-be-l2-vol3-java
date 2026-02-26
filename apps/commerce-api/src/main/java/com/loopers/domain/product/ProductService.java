@@ -38,29 +38,29 @@ public class ProductService {
     }
 
     public void increaseLikeCount(Long productId) {
-        Product product = findById(productId);
+        Product product = getById(productId);
         product.increaseLikeCount();
         productRepository.update(product);
     }
 
     public void decreaseLikeCount(Long productId) {
-        Product product = findById(productId);
+        Product product = getById(productId);
         product.decreaseLikeCount();
         productRepository.update(product);
     }
 
     public void decreaseStock(Long productId, Integer decreaseStock) {
-        Product product = findById(productId);
+        Product product = getById(productId);
         product.decreaseStock(decreaseStock);
         productRepository.update(product);
     }
 
-    public Product findById(Long id) {
+    public Product getById(Long id) {
         return productRepository.findById(id)
             .orElseThrow(() -> new CoreException(ErrorType.BAD_REQUEST, "상품을 찾을 수 없습니다"));
     }
 
-    public List<Product> findByIds(List<Long> ids) {
+    public List<Product> getByIds(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             throw new CoreException(ErrorType.BAD_REQUEST, "상품 ID 목록은 필수입니다");
         }
@@ -71,7 +71,7 @@ public class ProductService {
         return products;
     }
 
-    public List<Product> getProducts(ProductSearchCondition condition) {
+    public List<Product> findProducts(ProductSearchCondition condition) {
         if (condition == null) {
             throw new CoreException(ErrorType.BAD_REQUEST, "검색 조건은 필수입니다");
         }

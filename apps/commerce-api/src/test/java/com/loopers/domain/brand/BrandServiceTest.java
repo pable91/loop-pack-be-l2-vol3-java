@@ -37,36 +37,13 @@ class BrandServiceTest {
 
     @Test
     @DisplayName("id로 브랜드를 조회할 때 브랜드가 존재하지않으면 예외를 던진다")
-    void fail_findById_not_found_brand() {
+    void fail_getById_not_found_brand() {
         Long id = 10L;
 
         given(brandRepository.findById(id)).willReturn(Optional.empty());
 
-        Assertions.assertThatThrownBy(() -> brandService.findById(id))
+        Assertions.assertThatThrownBy(() -> brandService.getById(id))
             .isInstanceOf(CoreException.class)
             .hasMessage("브랜드를 찾을 수 없습니다");
     }
-
-
-//    @Test
-//    void check_default_return() {
-//        Long id = 10L;
-//
-//        Optional<Brand> result = brandRepository.findById(id);
-//
-//        System.out.println("result: " + result);
-//        System.out.println("isPresent: " + result.isPresent());
-//    }
-
-//    @Test
-//    @DisplayName("BrandEntity를 생성할 때 ID 초기값을 확인한다")
-//    void check_entity_initial_id() {
-//        Brand brand = Brand.create(null, "테스트", "설명");
-//
-//        BrandEntity entity = BrandEntity.create(brand);
-//
-//        System.out.println("생성된 엔티티의 ID: " + entity.getId());
-//
-//        Assertions.assertThat(entity.getId()).isEqualTo(null);
-//    }
 }

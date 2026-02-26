@@ -21,22 +21,22 @@ public class ProductFacade {
     private final ProductService productService;
 
     public List<Product> createProducts(Map<Long, CreateProductRequest> command) {
-        command.keySet().forEach(brandService::findById);
+        command.keySet().forEach(brandService::getById);
         return productService.createProducts(command);
     }
 
     @Transactional(readOnly = true)
     public ProductInfo getProduct(Long productId) {
-        Product product = productService.findById(productId);
-        Brand brand = brandService.findById(product.getRefBrandId());
+        Product product = productService.getById(productId);
+        Brand brand = brandService.getById(product.getRefBrandId());
         return ProductInfo.of(product, brand);
     }
 
     @Transactional(readOnly = true)
     public List<Product> getProducts(ProductSearchCondition condition) {
         if (condition.hasBrandId()) {
-            brandService.findById(condition.brandId());
+            brandService.getById(condition.brandId());
         }
-        return productService.getProducts(condition);
+        return productService.findProducts(condition);
     }
 }

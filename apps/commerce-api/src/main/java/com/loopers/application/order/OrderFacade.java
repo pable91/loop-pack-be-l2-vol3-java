@@ -27,7 +27,7 @@ public class OrderFacade {
         Long validatedUserId = userService.findById(userId).getId();
 
         List<Long> productIds = new ArrayList<>(productQuantities.keySet());
-        List<Product> products = productService.findByIds(productIds);
+        List<Product> products = productService.getByIds(productIds);
 
         Map<Product, Integer> productWithQuantities = products.stream()
             .collect(Collectors.toMap(

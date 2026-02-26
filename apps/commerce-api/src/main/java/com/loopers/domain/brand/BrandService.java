@@ -17,12 +17,12 @@ public class BrandService {
     }
 
     public Brand update(Long id, String name, String description) {
-        Brand brand = findById(id);
+        Brand brand = getById(id);
         brand.update(name, description);
         return brandRepository.update(brand);
     }
 
-    public Brand findById(Long id) {
+    public Brand getById(Long id) {
         return brandRepository.findById(id)
             .orElseThrow(() -> new CoreException(ErrorType.BAD_REQUEST, "브랜드를 찾을 수 없습니다"));
     }
