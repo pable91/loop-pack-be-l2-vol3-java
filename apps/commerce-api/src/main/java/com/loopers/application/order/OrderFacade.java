@@ -1,9 +1,11 @@
 package com.loopers.application.order;
 
+import com.loopers.domain.order.OrderItemService;
 import com.loopers.domain.order.OrderService;
+import com.loopers.domain.order.OrderStatus;
+import com.loopers.domain.order.OrderStatusHistoryService;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductService;
-import com.loopers.domain.user.UserService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +20,8 @@ public class OrderFacade {
 
     private final ProductService productService;
     private final OrderService orderService;
+    private final OrderItemService orderItemService;
+    private final OrderStatusHistoryService orderStatusHistoryService;
 
     public void order(Long userId, Map<Long, Integer> productQuantities) {
         List<Long> productIds = new ArrayList<>(productQuantities.keySet());
@@ -26,6 +30,12 @@ public class OrderFacade {
         products.forEach(product ->
             productService.decreaseStock(product.getId(), productQuantities.get(product.getId())));
 
-        orderService.createOrderWithItems(userId, products, productQuantities);
+        int totalPrice = orderItemService.calculateTotalPrice(products, productQuantities);
+
+        var order = orderService.createOrder(userId, totalPrice);
+
+        orderItemService.createOrderItems(order.getId(), products, productQuantities);
+
+        orderStatusHistoryService.recordHistory(order.getId(), OrderStatus.ORDERED);
     }
 }
