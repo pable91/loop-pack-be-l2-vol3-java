@@ -3,7 +3,9 @@ package com.loopers.domain.product;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.loopers.domain.common.Money;
 import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorMessage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -48,7 +50,7 @@ public class ProductTest {
             assertThat(product.getId()).isNull();
             assertThat(product.getName()).isEqualTo(DEFAULT_NAME);
             assertThat(product.getRefBrandId()).isEqualTo(DEFAULT_REF_BRAND_ID);
-            assertThat(product.getPrice()).isEqualTo(DEFAULT_PRICE);
+            assertThat(product.getPrice()).isEqualTo(new Money(DEFAULT_PRICE));
             assertThat(product.getStock()).isEqualTo(DEFAULT_STOCK);
             assertThat(product.getLikeCount()).isEqualTo(DEFAULT_LIKE_COUNT);
         }
@@ -82,7 +84,7 @@ public class ProductTest {
         void fail_when_invalid_price(Integer price) {
             assertCoreException(
                 () -> createProduct(null, DEFAULT_NAME, DEFAULT_REF_BRAND_ID, price, DEFAULT_STOCK, DEFAULT_LIKE_COUNT),
-                "상품 가격은 null이거나 음수가 될 수 없습니다"
+                ErrorMessage.Money.AMOUNT_INVALID
             );
         }
 

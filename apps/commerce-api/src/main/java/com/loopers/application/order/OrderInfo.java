@@ -16,7 +16,7 @@ public record OrderInfo(
             order.getId(),
             order.getRefUserId(),
             order.getStatus(),
-            order.getTotalPrice(),
+            order.getTotalPrice().value(),
             order.getOrderDt()
         );
     }

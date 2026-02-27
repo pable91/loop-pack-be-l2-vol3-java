@@ -3,7 +3,9 @@ package com.loopers.domain.order;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.loopers.domain.common.Money;
 import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorMessage;
 import java.time.ZonedDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -38,7 +40,7 @@ class OrderTest {
             Order order = createOrder(DEFAULT_USER_ID, DEFAULT_TOTAL_PRICE, DEFAULT_ORDER_DT);
 
             assertThat(order.getRefUserId()).isEqualTo(DEFAULT_USER_ID);
-            assertThat(order.getTotalPrice()).isEqualTo(DEFAULT_TOTAL_PRICE);
+            assertThat(order.getTotalPrice()).isEqualTo(new Money(DEFAULT_TOTAL_PRICE));
             assertThat(order.getStatus()).isEqualTo(OrderStatus.ORDERED);
             assertThat(order.getOrderDt()).isEqualTo(DEFAULT_ORDER_DT);
         }
@@ -50,7 +52,7 @@ class OrderTest {
         void fail_when_invalid_ref_user_id(Long refUserId) {
             assertCoreException(
                 () -> createOrder(refUserId, DEFAULT_TOTAL_PRICE, DEFAULT_ORDER_DT),
-                "유저FK는 null이거나 0이하가 될 수 없습니다"
+                ErrorMessage.Order.USER_ID_INVALID
             );
         }
 
@@ -61,7 +63,7 @@ class OrderTest {
         void fail_when_invalid_total_price(Integer totalPrice) {
             assertCoreException(
                 () -> createOrder(DEFAULT_USER_ID, totalPrice, DEFAULT_ORDER_DT),
-                "총 주문 금액은 null이거나 음수가 될 수 없습니다"
+                ErrorMessage.Money.AMOUNT_INVALID
             );
         }
 
@@ -70,7 +72,7 @@ class OrderTest {
         void fail_when_order_dt_is_null() {
             assertCoreException(
                 () -> createOrder(DEFAULT_USER_ID, DEFAULT_TOTAL_PRICE, null),
-                "주문 일시는 필수입니다"
+                ErrorMessage.Order.ORDER_DT_REQUIRED
             );
         }
     }
@@ -95,7 +97,7 @@ class OrderTest {
             Order order = createOrder(DEFAULT_USER_ID, DEFAULT_TOTAL_PRICE, DEFAULT_ORDER_DT);
             order.cancel();
 
-            assertCoreException(() -> order.cancel(), "주문 완료 상태에서만 취소할 수 있습니다");
+            assertCoreException(() -> order.cancel(), ErrorMessage.Order.CANCEL_ONLY_WHEN_COMPLETED);
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.loopers.domain.order;
 
+import com.loopers.domain.common.Money;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorMessage;
 import com.loopers.support.error.ErrorType;
@@ -14,10 +15,10 @@ public class Order {
     private final Long refUserId;
 
     private OrderStatus status;
-    private Integer totalPrice;
+    private Money totalPrice;
     private ZonedDateTime orderDt;
 
-    private Order(Long id, Long refUserId, OrderStatus status, Integer totalPrice, ZonedDateTime orderDt) {
+    private Order(Long id, Long refUserId, OrderStatus status, Money totalPrice, ZonedDateTime orderDt) {
         this.id = id;
         this.refUserId = refUserId;
         this.status = status;
@@ -27,21 +28,14 @@ public class Order {
 
     public static Order create(Long id, Long refUserId, OrderStatus status, Integer totalPrice, ZonedDateTime orderDt) {
         validateRefUserId(refUserId);
-        validateTotalPrice(totalPrice);
         validateOrderDt(orderDt);
 
-        return new Order(id, refUserId, status, totalPrice, orderDt);
+        return new Order(id, refUserId, status, new Money(totalPrice), orderDt);
     }
 
     private static void validateRefUserId(Long refUserId) {
         if (refUserId == null || refUserId <= 0) {
             throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Order.USER_ID_INVALID);
-        }
-    }
-
-    private static void validateTotalPrice(Integer totalPrice) {
-        if (totalPrice == null || totalPrice < 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Order.TOTAL_ORDER_AMOUNT_INVALID);
         }
     }
 
@@ -70,7 +64,7 @@ public class Order {
         return status;
     }
 
-    public Integer getTotalPrice() {
+    public Money getTotalPrice() {
         return totalPrice;
     }
 

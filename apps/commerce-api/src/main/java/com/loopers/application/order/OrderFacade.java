@@ -29,9 +29,9 @@ public class OrderFacade {
         products.forEach(product ->
             productService.decreaseStock(product.getId(), command.productQuantities().get(product.getId())));
 
-        int totalPrice = orderItemService.calculateTotalPrice(products, command.productQuantities());
+        var totalPrice = orderItemService.calculateTotalPrice(products, command.productQuantities());
 
-        var order = orderService.createOrder(command.userId(), totalPrice);
+        var order = orderService.createOrder(command.userId(), totalPrice.value());
 
         orderItemService.createOrderItems(order.getId(), products, command.productQuantities());
 

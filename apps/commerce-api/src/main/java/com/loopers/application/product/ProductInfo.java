@@ -18,7 +18,7 @@ public record ProductInfo(
         return new ProductInfo(
             product.getId(),
             product.getName(),
-            product.getPrice(),
+            product.getPrice().value(),
             product.getStock(),
             product.getLikeCount(),
             brand.getId(),

@@ -3,6 +3,7 @@ package com.loopers.domain.order;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.loopers.domain.common.Money;
 import com.loopers.domain.product.Product;
 import com.loopers.support.error.CoreException;
 import java.util.List;
@@ -69,9 +70,9 @@ class OrderItemServiceTest {
                 2L, 3
             );
 
-            int totalPrice = orderItemService.calculateTotalPrice(products, productQuantities);
+            Money totalPrice = orderItemService.calculateTotalPrice(products, productQuantities);
 
-            assertThat(totalPrice).isEqualTo(3500);
+            assertThat(totalPrice.value()).isEqualTo(3500);
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.loopers.domain.product;
 
+import com.loopers.domain.common.Money;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorMessage;
 import com.loopers.support.error.ErrorType;
@@ -13,11 +14,11 @@ public class Product {
     private final Long refBrandId;
 
     private String name;
-    private Integer price;
+    private Money price;
     private Integer stock;
     private Integer likeCount;
 
-    private Product(Long id, String name, Long refBrandId, Integer price, Integer stock, Integer likeCount) {
+    private Product(Long id, String name, Long refBrandId, Money price, Integer stock, Integer likeCount) {
         this.id = id;
         this.name = name;
         this.refBrandId = refBrandId;
@@ -29,11 +30,10 @@ public class Product {
     public static Product create(Long id, String name, Long refBrandId, Integer price, Integer stock, Integer likeCount) {
         validateName(name);
         validateBrandId(refBrandId);
-        validatePrice(price);
         validateStock(stock);
         validateLike(likeCount);
 
-        return new Product(id, name, refBrandId, price, stock, likeCount);
+        return new Product(id, name, refBrandId, new Money(price), stock, likeCount);
     }
 
     private static void validateName(String name) {
@@ -45,12 +45,6 @@ public class Product {
     private static void validateBrandId(Long refBrand) {
         if (refBrand == null || refBrand <= 0) {
             throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Product.BRAND_ID_INVALID);
-        }
-    }
-
-    private static void validatePrice(Integer price) {
-        if (price == null || price < 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Product.PRICE_INVALID);
         }
     }
 
@@ -107,7 +101,7 @@ public class Product {
         return refBrandId;
     }
 
-    public Integer getPrice() {
+    public Money getPrice() {
         return price;
     }
 

@@ -48,7 +48,7 @@ public class OrderEntity extends BaseEntity {
         return new OrderEntity(
             order.getRefUserId(),
             order.getStatus(),
-            order.getTotalPrice(),
+            order.getTotalPrice().value(),
             order.getOrderDt()
         );
     }

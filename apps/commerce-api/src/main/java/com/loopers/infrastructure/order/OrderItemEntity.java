@@ -44,7 +44,7 @@ public class OrderItemEntity extends BaseEntity {
             orderItem.refOrderId(),
             orderItem.refProductId(),
             orderItem.quantity(),
-            orderItem.price()
+            orderItem.price().value()
         );
     }
 

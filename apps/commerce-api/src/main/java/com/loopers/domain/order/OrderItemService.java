@@ -1,5 +1,6 @@
 package com.loopers.domain.order;
 
+import com.loopers.domain.common.Money;
 import com.loopers.domain.product.Product;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorMessage;
@@ -29,19 +30,16 @@ public class OrderItemService {
                 orderId,
                 product.getId(),
                 productQuantities.get(product.getId()),
-                product.getPrice()
+                product.getPrice().value()
             ))
             .toList();
 
         orderItemRepository.saveAll(orderItems);
     }
 
-    public int calculateTotalPrice(List<Product> products, Map<Long, Integer> productQuantities) {
+    public Money calculateTotalPrice(List<Product> products, Map<Long, Integer> productQuantities) {
         return products.stream()
-            .mapToInt(product -> OrderItem.calculateSubtotal(
-                product.getPrice(),
-                productQuantities.get(product.getId())
-            ))
-            .sum();
+            .map(product -> product.getPrice().multiply(productQuantities.get(product.getId())))
+            .reduce(Money.ZERO, Money::add);
     }
 }

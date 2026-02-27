@@ -31,6 +31,15 @@ public final class ErrorMessage {
     }
 
     /**
+     * Money VO 관련 에러 메시지
+     */
+    public static final class Money {
+        private Money() {}
+
+        public static final String AMOUNT_INVALID = "금액은 null이거나 음수가 될 수 없습니다";
+    }
+
+    /**
      * Product 도메인 관련 에러 메시지
      */
     public static final class Product {
@@ -43,7 +52,6 @@ public final class ErrorMessage {
         public static final String SEARCH_CONDITION_REQUIRED = "검색 조건은 필수입니다";
         public static final String PRODUCT_NAME_REQUIRED = "상품 이름은 필수 입니다";
         public static final String BRAND_ID_INVALID = "브랜드FK는 null이거나 0이하가 될 수 없습니다";
-        public static final String PRICE_INVALID = "상품 가격은 null이거나 음수가 될 수 없습니다";
         public static final String STOCK_INVALID = "상품 재고는 null이거나 음수가 될 수 없습니다";
         public static final String LIKE_COUNT_INVALID = "좋아요 수는 null이거나 음수가 될 수 없습니다";
         public static final String INSUFFICIENT_STOCK = "재고가 부족합니다";
@@ -73,9 +81,7 @@ public final class ErrorMessage {
         public static final String ORDER_STATUS_REQUIRED = "주문 상태는 필수입니다";
         public static final String ORDER_STATUS_CHANGE_DT_REQUIRED = "주문 상태 변경 일시는 필수입니다";
         public static final String PRODUCT_ID_INVALID = "상품FK는 null이거나 0이하가 될 수 없습니다";
-        public static final String ORDER_AMOUNT_INVALID = "주문 금액은 null이거나 음수가 될 수 없습니다";
         public static final String USER_ID_INVALID = "유저FK는 null이거나 0이하가 될 수 없습니다";
-        public static final String TOTAL_ORDER_AMOUNT_INVALID = "총 주문 금액은 null이거나 음수가 될 수 없습니다";
         public static final String ORDER_DT_REQUIRED = "주문 일시는 필수입니다";
         public static final String CANCEL_ONLY_WHEN_COMPLETED = "주문 완료 상태에서만 취소할 수 있습니다";
         public static final String QUANTITY_MUST_BE_POSITIVE = "수량은 양수여야 합니다";
