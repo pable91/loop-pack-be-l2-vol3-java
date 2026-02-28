@@ -21,7 +21,8 @@ public class LikeRepositoryImpl implements LikeRepository {
 
     @Override
     public void delete(Like like) {
-        likeJpaRepository.delete(LikeEntity.toEntity(like));
+        likeJpaRepository.findByRefProductIdAndRefUserId(like.getRefProductId(), like.getRefUserId())
+            .ifPresent(likeJpaRepository::delete);
     }
 
     @Override
