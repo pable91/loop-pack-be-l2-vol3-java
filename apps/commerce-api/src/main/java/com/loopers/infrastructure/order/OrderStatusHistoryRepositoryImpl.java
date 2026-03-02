@@ -14,6 +14,6 @@ public class OrderStatusHistoryRepositoryImpl implements OrderStatusHistoryRepos
     @Override
     public OrderStatusHistory save(OrderStatusHistory history) {
         OrderStatusHistoryEntity entity = OrderStatusHistoryEntity.create(history);
-        return OrderStatusHistoryEntity.toDomain(orderStatusHistoryJpaRepository.save(entity));
+        return orderStatusHistoryJpaRepository.save(entity).toDomain();
     }
 }

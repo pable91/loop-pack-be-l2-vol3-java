@@ -2,13 +2,22 @@ package com.loopers.infrastructure.order;
 
 import com.loopers.domain.BaseEntity;
 import com.loopers.domain.order.Order;
+import com.loopers.domain.order.OrderItem;
 import com.loopers.domain.order.OrderStatus;
+import com.loopers.domain.order.OrderStatusHistory;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
 
@@ -37,6 +46,14 @@ public class OrderEntity extends BaseEntity {
     @Column(name = "order_dt", nullable = false, updatable = false)
     private ZonedDateTime orderDt;
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "ref_order_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    private List<OrderItemEntity> items = new ArrayList<>();
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "ref_order_id", nullable = false, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    private List<OrderStatusHistoryEntity> histories = new ArrayList<>();
+
     private OrderEntity(Long refUserId, OrderStatus status, Integer totalPrice, ZonedDateTime orderDt) {
         this.refUserId = refUserId;
         this.status = status;
@@ -45,21 +62,41 @@ public class OrderEntity extends BaseEntity {
     }
 
     public static OrderEntity create(Order order) {
-        return new OrderEntity(
+        OrderEntity entity = new OrderEntity(
             order.getRefUserId(),
             order.getStatus(),
             order.getTotalPrice().value(),
             order.getOrderDt()
         );
+
+        order.getItems().forEach(item ->
+            entity.items.add(OrderItemEntity.create(item))
+        );
+
+        order.getHistories().forEach(history ->
+            entity.histories.add(OrderStatusHistoryEntity.create(history))
+        );
+
+        return entity;
     }
 
-    public static Order toDomain(OrderEntity entity) {
-        return Order.create(
-            entity.getId(),
-            entity.refUserId,
-            entity.status,
-            entity.totalPrice,
-            entity.orderDt
+    public Order toDomain() {
+        List<OrderItem> domainItems = items.stream()
+            .map(OrderItemEntity::toDomain)
+            .toList();
+
+        List<OrderStatusHistory> domainHistories = histories.stream()
+            .map(OrderStatusHistoryEntity::toDomain)
+            .toList();
+
+        return Order.restore(
+            this.getId(),
+            this.refUserId,
+            this.status,
+            this.totalPrice,
+            this.orderDt,
+            domainItems,
+            domainHistories
         );
     }
 

@@ -17,7 +17,7 @@ import org.hibernate.annotations.Comment;
 public class OrderItemEntity extends BaseEntity {
 
     @Comment("주문 id (ref)")
-    @Column(name = "ref_order_id", nullable = false, updatable = false)
+    @Column(name = "ref_order_id", insertable = false, updatable = false)
     private Long refOrderId;
 
     @Comment("상품 id (ref)")
@@ -48,13 +48,13 @@ public class OrderItemEntity extends BaseEntity {
         );
     }
 
-    public static OrderItem toDomain(OrderItemEntity entity) {
+    public OrderItem toDomain() {
         return OrderItem.create(
-            entity.getId(),
-            entity.refOrderId,
-            entity.refProductId,
-            entity.quantity,
-            entity.price
+            this.getId(),
+            this.refOrderId,
+            this.refProductId,
+            this.quantity,
+            this.price
         );
     }
 

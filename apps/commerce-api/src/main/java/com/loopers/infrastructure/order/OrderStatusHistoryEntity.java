@@ -21,7 +21,7 @@ import org.hibernate.annotations.Comment;
 public class OrderStatusHistoryEntity extends BaseEntity {
 
     @Comment("주문 id (ref)")
-    @Column(name = "ref_order_id", nullable = false, updatable = false)
+    @Column(name = "ref_order_id", insertable = false, updatable = false)
     private Long refOrderId;
 
     @Comment("주문 상태")
@@ -47,12 +47,12 @@ public class OrderStatusHistoryEntity extends BaseEntity {
         );
     }
 
-    public static OrderStatusHistory toDomain(OrderStatusHistoryEntity entity) {
+    public OrderStatusHistory toDomain() {
         return OrderStatusHistory.create(
-            entity.getId(),
-            entity.refOrderId,
-            entity.status,
-            entity.changedAt
+            this.getId(),
+            this.refOrderId,
+            this.status,
+            this.changedAt
         );
     }
 
