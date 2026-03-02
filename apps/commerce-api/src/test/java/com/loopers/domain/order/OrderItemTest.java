@@ -43,7 +43,6 @@ class OrderItemTest {
 
         @DisplayName("주문FK가 유효하지 않으면, 생성시 예외를 던진다")
         @ParameterizedTest
-        @NullSource
         @ValueSource(longs = {-1L, 0L})
         void fail_when_invalid_ref_order_id(Long refOrderId) {
             assertCoreException(

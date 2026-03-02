@@ -5,9 +5,11 @@ import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorMessage;
 import com.loopers.support.error.ErrorType;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- *  Order 도메인
+ *  Order 도메인 (애그리거트 루트)
  */
 public class Order {
 
@@ -17,6 +19,10 @@ public class Order {
     private OrderStatus status;
     private Money totalPrice;
     private ZonedDateTime orderDt;
+
+    // 애그리거트 내부 엔티티 컬렉션
+    private final List<OrderItem> items = new ArrayList<>();
+    private final List<OrderStatusHistory> histories = new ArrayList<>();
 
     private Order(Long id, Long refUserId, OrderStatus status, Money totalPrice, ZonedDateTime orderDt) {
         this.id = id;
@@ -33,6 +39,57 @@ public class Order {
         return new Order(id, refUserId, status, new Money(totalPrice), orderDt);
     }
 
+    /**
+     * 저장소에서 복원할 때 사용하는 팩토리 메서드
+     * items와 histories를 함께 받아서 복원한다.
+     */
+    public static Order restore(Long id, Long refUserId, OrderStatus status, Integer totalPrice,
+                                ZonedDateTime orderDt, List<OrderItem> items, List<OrderStatusHistory> histories) {
+        validateRefUserId(refUserId);
+        validateOrderDt(orderDt);
+
+        Order order = new Order(id, refUserId, status, new Money(totalPrice), orderDt);
+        if (items != null) {
+            order.items.addAll(items);
+        }
+        if (histories != null) {
+            order.histories.addAll(histories);
+        }
+        return order;
+    }
+
+    /**
+     * 주문 애그리거트 생성 팩토리
+     * - 주문자, 주문 아이템 스펙, 주문 시각을 받아 애그리거트를 구성한다.
+     * - 현재 단계에서는 OrderItem / OrderStatusHistory 컬렉션을 조립하는 책임만 추가한다.
+     */
+    public static Order place(Long userId, List<OrderItemSpec> itemSpecs, ZonedDateTime now) {
+        validateRefUserId(userId);
+        if (itemSpecs == null || itemSpecs.isEmpty()) {
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Order.ORDER_ITEMS_EMPTY);
+        }
+        validateOrderDt(now);
+
+        Money total = itemSpecs.stream()
+            .map(spec -> spec.price().multiply(spec.quantity()))
+            .reduce(Money.ZERO, Money::add);
+
+        Order order = new Order(
+            null,
+            userId,
+            OrderStatus.ORDERED,
+            total,
+            now
+        );
+
+        itemSpecs.forEach(spec ->
+            order.addItem(spec.productId(), spec.price(), spec.quantity())
+        );
+        order.recordStatusChange(OrderStatus.ORDERED, now);
+
+        return order;
+    }
+
     private static void validateRefUserId(Long refUserId) {
         if (refUserId == null || refUserId <= 0) {
             throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Order.USER_ID_INVALID);
@@ -43,6 +100,38 @@ public class Order {
         if (orderDt == null) {
             throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Order.ORDER_DT_REQUIRED);
         }
+    }
+
+    /**
+     * 애그리거트 내부에 주문 아이템 추가
+     */
+    public void addItem(Long productId, Money unitPrice, int quantity) {
+        this.items.add(OrderItem.create(
+            null,
+            this.id, // 새 주문의 경우 null일 수 있지만, 인프라에서 매핑 시 채워진다
+            productId,
+            quantity,
+            unitPrice.value()
+        ));
+    }
+
+    /**
+     * 주문 상태 변경 + 이력 기록
+     */
+    public void recordStatusChange(OrderStatus newStatus, ZonedDateTime changedAt) {
+        if (newStatus == null) {
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Order.ORDER_STATUS_REQUIRED);
+        }
+        if (changedAt == null) {
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Order.ORDER_STATUS_CHANGE_DT_REQUIRED);
+        }
+        this.status = newStatus;
+        this.histories.add(OrderStatusHistory.create(
+            null,
+            this.id,
+            newStatus,
+            changedAt
+        ));
     }
 
     public void cancel() {
@@ -71,4 +160,16 @@ public class Order {
     public ZonedDateTime getOrderDt() {
         return orderDt;
     }
+
+    /**
+     * 애그리거트 내부 컬렉션 조회용 (불변 뷰 반환)
+     */
+    public List<OrderItem> getItems() {
+        return List.copyOf(items);
+    }
+
+    public List<OrderStatusHistory> getHistories() {
+        return List.copyOf(histories);
+    }
 }
+
