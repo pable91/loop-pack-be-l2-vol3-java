@@ -4,14 +4,17 @@ import com.loopers.application.admin.AdminPrincipal;
 import com.loopers.application.coupon.CouponFacade;
 import com.loopers.application.coupon.CouponInfo;
 import com.loopers.application.coupon.CreateCouponTemplateCommand;
+import com.loopers.application.coupon.UpdateCouponTemplateCommand;
 import com.loopers.interfaces.api.ApiResponse;
 import com.loopers.interfaces.api.admin.AdminUser;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -56,5 +59,31 @@ public class AdminCouponV1Controller {
         );
         CouponInfo couponInfo = couponFacade.createCouponTemplate(command);
         return ApiResponse.success(AdminCouponV1Dto.CouponTemplateResponse.from(couponInfo));
+    }
+
+    @PutMapping("/{couponId}")
+    public ApiResponse<AdminCouponV1Dto.CouponTemplateResponse> updateCouponTemplate(
+        @AdminUser AdminPrincipal admin,
+        @PathVariable Long couponId,
+        @Valid @RequestBody AdminCouponV1Dto.UpdateCouponTemplateRequest request
+    ) {
+        UpdateCouponTemplateCommand command = new UpdateCouponTemplateCommand(
+            couponId,
+            request.name(),
+            request.discountType(),
+            request.minOrderAmount(),
+            request.expiredAt()
+        );
+        CouponInfo couponInfo = couponFacade.updateCouponTemplate(command);
+        return ApiResponse.success(AdminCouponV1Dto.CouponTemplateResponse.from(couponInfo));
+    }
+
+    @DeleteMapping("/{couponId}")
+    public ApiResponse<Void> deleteCouponTemplate(
+        @AdminUser AdminPrincipal admin,
+        @PathVariable Long couponId
+    ) {
+        couponFacade.deleteCouponTemplate(couponId);
+        return ApiResponse.success(null);
     }
 }

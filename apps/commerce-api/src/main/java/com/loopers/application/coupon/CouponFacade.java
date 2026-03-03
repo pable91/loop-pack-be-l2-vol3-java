@@ -24,6 +24,23 @@ public class CouponFacade {
         return CouponInfo.from(coupon);
     }
 
+    @Transactional
+    public CouponInfo updateCouponTemplate(UpdateCouponTemplateCommand command) {
+        Coupon coupon = couponService.updateCouponTemplate(
+            command.couponId(),
+            command.name(),
+            command.discountType(),
+            command.minOrderAmount(),
+            command.expiredAt()
+        );
+        return CouponInfo.from(coupon);
+    }
+
+    @Transactional
+    public void deleteCouponTemplate(Long couponId) {
+        couponService.deleteCouponTemplate(couponId);
+    }
+
     @Transactional(readOnly = true)
     public CouponInfo getCouponTemplate(Long couponId) {
         Coupon coupon = couponService.getById(couponId);

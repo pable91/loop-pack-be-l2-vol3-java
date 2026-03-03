@@ -35,6 +35,25 @@ public class Coupon {
         return new Coupon(null, new Name(name), discountType, new Money(minOrderAmount), expiredAt, CouponUsageType.AVAILABLE);
     }
 
+    /**
+     * 쿠폰 템플릿 수정
+     * - 이름, 할인 타입, 최소 주문 금액, 만료 일시를 변경한다.
+     * - ID와 사용 상태는 그대로 유지한다.
+     */
+    public Coupon updateTemplate(String name, DiscountType discountType, Integer minOrderAmount, ZonedDateTime expiredAt) {
+        validateDiscountType(discountType);
+        validateExpiredAt(expiredAt);
+
+        return new Coupon(
+            this.id,
+            new Name(name),
+            discountType,
+            new Money(minOrderAmount),
+            expiredAt,
+            this.usageType
+        );
+    }
+
     private static void validateDiscountType(DiscountType discountType) {
         if (discountType == null) {
             throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Coupon.DISCOUNT_TYPE_REQUIRED);

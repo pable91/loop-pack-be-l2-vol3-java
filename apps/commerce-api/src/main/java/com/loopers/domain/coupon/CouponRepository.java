@@ -9,4 +9,8 @@ public interface CouponRepository {
     Coupon findById(Long id);
 
     List<Coupon> findAll(CouponSearchCondition condition);
+
+    Coupon update(Coupon coupon);
+
+    void delete(Long id);
 }

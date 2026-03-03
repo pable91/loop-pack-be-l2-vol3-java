@@ -1,5 +1,7 @@
 package com.loopers.infrastructure.coupon;
 
+
+
 import static com.loopers.infrastructure.coupon.QCouponEntity.couponEntity;
 
 import com.loopers.domain.coupon.Coupon;
@@ -44,5 +46,21 @@ public class CouponRepositoryImpl implements CouponRepository {
             .stream()
             .map(CouponEntity::toDomain)
             .toList();
+    }
+
+    @Override
+    public Coupon update(Coupon coupon) {
+        CouponEntity entity = couponJpaRepository.findById(coupon.getId())
+            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "쿠폰을 찾을 수 없습니다."));
+        entity.updateFrom(coupon);
+        return couponJpaRepository.save(entity).toDomain();
+    }
+
+    @Override
+    public void delete(Long id) {
+        if (!couponJpaRepository.existsById(id)) {
+            throw new CoreException(ErrorType.NOT_FOUND, "쿠폰을 찾을 수 없습니다.");
+        }
+        couponJpaRepository.deleteById(id);
     }
 }

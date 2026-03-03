@@ -44,7 +44,7 @@ public class CouponEntity extends BaseEntity {
     private Integer minOrderAmount;
 
     @Comment("만료 날짜")
-    @Column(name = "expired_at", nullable = false, updatable = false)
+    @Column(name = "expired_at", nullable = false)
     private ZonedDateTime expiredAt;
 
     private CouponEntity(Long refUserId, String name, DiscountType type, CouponUsageType usageType, Integer minOrderAmount, ZonedDateTime expiredAt) {
@@ -76,5 +76,13 @@ public class CouponEntity extends BaseEntity {
             this.expiredAt,
             this.usageType
         );
+    }
+
+    public void updateFrom(Coupon coupon) {
+        this.name = coupon.getName().value();
+        this.type = coupon.getType();
+        this.minOrderAmount = coupon.getMinOrderAmount().value();
+        this.expiredAt = coupon.getExpiredAt();
+        // usageType, refUserId 는 템플릿 수정에서는 변경하지 않음
     }
 }

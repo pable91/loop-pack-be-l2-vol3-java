@@ -24,4 +24,15 @@ public class CouponService {
         CouponSearchCondition condition = CouponSearchCondition.of(page, size);
         return couponRepository.findAll(condition);
     }
+
+    public Coupon updateCouponTemplate(Long couponId, String name, DiscountType discountType, Integer minOrderAmount,
+        ZonedDateTime expiredAt) {
+        Coupon coupon = couponRepository.findById(couponId);
+        Coupon updated = coupon.updateTemplate(name, discountType, minOrderAmount, expiredAt);
+        return couponRepository.update(updated);
+    }
+
+    public void deleteCouponTemplate(Long couponId) {
+        couponRepository.delete(couponId);
+    }
 }
