@@ -54,4 +54,18 @@ public class CouponFacade {
             .map(CouponInfo::from)
             .toList();
     }
+
+    @Transactional
+    public CouponInfo issueCoupon(Long userId, Long couponId) {
+        Coupon coupon = couponService.issueCoupon(userId, couponId);
+        return CouponInfo.from(coupon);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CouponInfo> getMyCoupons(Long userId) {
+        List<Coupon> coupons = couponService.findByUserId(userId);
+        return coupons.stream()
+            .map(CouponInfo::from)
+            .toList();
+    }
 }

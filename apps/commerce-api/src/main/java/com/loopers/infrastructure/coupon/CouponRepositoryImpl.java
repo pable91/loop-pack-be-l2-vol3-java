@@ -31,6 +31,13 @@ public class CouponRepositoryImpl implements CouponRepository {
     }
 
     @Override
+    public Coupon saveWithUser(Long userId, Coupon coupon) {
+        CouponEntity entity = CouponEntity.create(userId, coupon);
+        CouponEntity savedEntity = couponJpaRepository.save(entity);
+        return savedEntity.toDomain();
+    }
+
+    @Override
     public Optional<Coupon> findById(Long id) {
         return couponJpaRepository.findById(id)
             .map(CouponEntity::toDomain);
@@ -40,9 +47,22 @@ public class CouponRepositoryImpl implements CouponRepository {
     public List<Coupon> findAll(CouponSearchCondition condition) {
         return queryFactory
             .selectFrom(couponEntity)
+            .where(couponEntity.refUserId.isNull())
             .orderBy(couponEntity.createdAt.desc())
             .offset((long) condition.page() * condition.size())
             .limit(condition.size())
+            .fetch()
+            .stream()
+            .map(CouponEntity::toDomain)
+            .toList();
+    }
+
+    @Override
+    public List<Coupon> findByUserId(Long userId) {
+        return queryFactory
+            .selectFrom(couponEntity)
+            .where(couponEntity.refUserId.eq(userId))
+            .orderBy(couponEntity.createdAt.desc())
             .fetch()
             .stream()
             .map(CouponEntity::toDomain)

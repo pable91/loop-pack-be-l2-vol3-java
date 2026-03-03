@@ -39,4 +39,13 @@ public class CouponService {
     public void deleteCouponTemplate(Long couponId) {
         couponRepository.delete(couponId);
     }
+
+    public Coupon issueCoupon(Long userId, Long couponId) {
+        Coupon template = getById(couponId);
+        return couponRepository.saveWithUser(userId, template);
+    }
+
+    public List<Coupon> findByUserId(Long userId) {
+        return couponRepository.findByUserId(userId);
+    }
 }
