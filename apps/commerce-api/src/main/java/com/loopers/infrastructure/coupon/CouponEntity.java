@@ -56,7 +56,7 @@ public class CouponEntity extends BaseEntity {
             refUserId,
             coupon.getType(),
             coupon.getUsageType(),
-            coupon.getMinOrderAmount(),
+            coupon.getMinOrderAmount().value(),
             coupon.getExpiredAt()
         );
     }
