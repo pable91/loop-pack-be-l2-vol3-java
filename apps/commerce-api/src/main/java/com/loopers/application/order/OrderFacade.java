@@ -13,12 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class OrderFacade {
 
     private final ProductService productService;
     private final OrderService orderService;
 
+    @Transactional
     public OrderInfo order(OrderCommand command) {
         List<Long> productIds = new ArrayList<>(command.productQuantities().keySet());
         List<Product> products = productService.getByIds(productIds);
