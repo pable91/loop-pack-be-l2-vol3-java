@@ -38,7 +38,7 @@ class CouponTest {
             Coupon coupon = Coupon.create(DEFAULT_NAME, DEFAULT_DISCOUNT_TYPE, DEFAULT_MIN_ORDER_AMOUNT, DEFAULT_EXPIRED_AT);
 
             assertThat(coupon.getId()).isNull();
-            assertThat(coupon.getName()).isEqualTo(DEFAULT_NAME);
+            assertThat(coupon.getName().value()).isEqualTo(DEFAULT_NAME);
             assertThat(coupon.getType()).isEqualTo(DEFAULT_DISCOUNT_TYPE);
             assertThat(coupon.getMinOrderAmount()).isEqualTo(new Money(DEFAULT_MIN_ORDER_AMOUNT));
             assertThat(coupon.getExpiredAt()).isEqualTo(DEFAULT_EXPIRED_AT);
@@ -52,7 +52,7 @@ class CouponTest {
         void fail_when_name_is_blank(String name) {
             assertCoreException(
                 () -> Coupon.create(name, DEFAULT_DISCOUNT_TYPE, DEFAULT_MIN_ORDER_AMOUNT, DEFAULT_EXPIRED_AT),
-                ErrorMessage.Coupon.NAME_REQUIRED
+                ErrorMessage.Name.NAME_REQUIRED
             );
         }
 

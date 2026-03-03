@@ -26,7 +26,7 @@ public class CouponEntity extends BaseEntity {
     private Long refUserId;
 
     @Comment("쿠폰 이름")
-    @Column(name = "name", nullable = true)
+    @Column(name = "name", nullable = false)
     private String name;
 
     @Comment("할인 타입")
@@ -47,8 +47,9 @@ public class CouponEntity extends BaseEntity {
     @Column(name = "expired_at", nullable = false, updatable = false)
     private ZonedDateTime expiredAt;
 
-    private CouponEntity(Long refUserId, DiscountType type, CouponUsageType usageType, Integer minOrderAmount, ZonedDateTime expiredAt) {
+    private CouponEntity(Long refUserId, String name, DiscountType type, CouponUsageType usageType, Integer minOrderAmount, ZonedDateTime expiredAt) {
         this.refUserId = refUserId;
+        this.name = name;
         this.type = type;
         this.usageType = usageType;
         this.minOrderAmount = minOrderAmount;
@@ -58,6 +59,7 @@ public class CouponEntity extends BaseEntity {
     public static CouponEntity create(Long refUserId, Coupon coupon) {
         return new CouponEntity(
             refUserId,
+            coupon.getName().value(),
             coupon.getType(),
             coupon.getUsageType(),
             coupon.getMinOrderAmount().value(),
