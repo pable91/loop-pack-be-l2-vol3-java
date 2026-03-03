@@ -135,5 +135,7 @@ public final class ErrorMessage {
         private Auth() {}
 
         public static final String AUTH_HEADER_MISSING = "인증 헤더가 누락되었습니다.";
+        public static final String ADMIN_AUTH_HEADER_MISSING = "관리자 인증 헤더가 누락되었습니다.";
+        public static final String ADMIN_AUTH_FAILED = "관리자 인증에 실패했습니다.";
     }
 }
