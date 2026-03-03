@@ -8,9 +8,11 @@ import com.loopers.domain.coupon.Coupon;
 import com.loopers.domain.coupon.CouponRepository;
 import com.loopers.domain.coupon.CouponSearchCondition;
 import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorMessage;
 import com.loopers.support.error.ErrorType;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -29,10 +31,9 @@ public class CouponRepositoryImpl implements CouponRepository {
     }
 
     @Override
-    public Coupon findById(Long id) {
+    public Optional<Coupon> findById(Long id) {
         return couponJpaRepository.findById(id)
-            .map(CouponEntity::toDomain)
-            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "쿠폰을 찾을 수 없습니다."));
+            .map(CouponEntity::toDomain);
     }
 
     @Override
@@ -51,7 +52,7 @@ public class CouponRepositoryImpl implements CouponRepository {
     @Override
     public Coupon update(Coupon coupon) {
         CouponEntity entity = couponJpaRepository.findById(coupon.getId())
-            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "쿠폰을 찾을 수 없습니다."));
+            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, ErrorMessage.Coupon.COUPON_NOT_FOUND));
         entity.updateFrom(coupon);
         return couponJpaRepository.save(entity).toDomain();
     }
@@ -59,7 +60,7 @@ public class CouponRepositoryImpl implements CouponRepository {
     @Override
     public void delete(Long id) {
         if (!couponJpaRepository.existsById(id)) {
-            throw new CoreException(ErrorType.NOT_FOUND, "쿠폰을 찾을 수 없습니다.");
+            throw new CoreException(ErrorType.NOT_FOUND, ErrorMessage.Coupon.COUPON_NOT_FOUND);
         }
         couponJpaRepository.deleteById(id);
     }

@@ -58,7 +58,7 @@ public class ProductService {
 
     public Product getById(Long id) {
         return productRepository.findById(id)
-            .orElseThrow(() -> new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Product.PRODUCT_NOT_FOUND));
+            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, ErrorMessage.Product.PRODUCT_NOT_FOUND));
     }
 
     public List<Product> getByIds(List<Long> ids) {
