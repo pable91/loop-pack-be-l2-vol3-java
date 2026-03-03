@@ -105,6 +105,7 @@ public final class ErrorMessage {
     public static final class Coupon {
         private Coupon() {}
 
+        public static final String NAME_REQUIRED = "쿠폰 이름은 필수입니다";
         public static final String DISCOUNT_TYPE_REQUIRED = "할인 유형은 필수입니다";
         public static final String EXPIRED_AT_REQUIRED = "만료 일시는 필수입니다";
         public static final String EXPIRED_AT_MUST_BE_FUTURE = "만료 일시는 현재 시간 이후여야 합니다";

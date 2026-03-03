@@ -12,24 +12,34 @@ import java.time.ZonedDateTime;
 public class Coupon {
 
     private final Long id;
+    private final String name;
     private final DiscountType type;
     private final Money minOrderAmount;
     private final ZonedDateTime expiredAt;
     private final CouponUsageType usageType;
 
-    private Coupon(Long id, DiscountType type, Money minOrderAmount, ZonedDateTime expiredAt, CouponUsageType usageType) {
+    private Coupon(Long id, String name, DiscountType type, Money minOrderAmount, ZonedDateTime expiredAt,
+        CouponUsageType usageType) {
         this.id = id;
+        this.name = name;
         this.type = type;
         this.minOrderAmount = minOrderAmount;
         this.expiredAt = expiredAt;
         this.usageType = usageType;
     }
 
-    public static Coupon create(DiscountType discountType, Integer minOrderAmount, ZonedDateTime expiredAt) {
+    public static Coupon create(String name, DiscountType discountType, Integer minOrderAmount, ZonedDateTime expiredAt) {
+        validateName(name);
         validateDiscountType(discountType);
         validateExpiredAt(expiredAt);
 
-        return new Coupon(null, discountType, new Money(minOrderAmount), expiredAt, CouponUsageType.AVAILABLE);
+        return new Coupon(null, name, discountType, new Money(minOrderAmount), expiredAt, CouponUsageType.AVAILABLE);
+    }
+
+    private static void validateName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Coupon.NAME_REQUIRED);
+        }
     }
 
     private static void validateDiscountType(DiscountType discountType) {
@@ -47,13 +57,17 @@ public class Coupon {
         }
     }
 
-    public static Coupon restore(Long id, DiscountType type, Integer minOrderAmount, ZonedDateTime expiredAt,
+    public static Coupon restore(Long id, String name, DiscountType type, Integer minOrderAmount, ZonedDateTime expiredAt,
         CouponUsageType usageType) {
-        return new Coupon(id, type, new Money(minOrderAmount), expiredAt, usageType);
+        return new Coupon(id, name, type, new Money(minOrderAmount), expiredAt, usageType);
     }
 
     public Long getId() {
         return id;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public DiscountType getType() {

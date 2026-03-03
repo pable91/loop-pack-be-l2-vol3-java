@@ -25,6 +25,10 @@ public class CouponEntity extends BaseEntity {
     @Column(name = "ref_user_id", nullable = true)
     private Long refUserId;
 
+    @Comment("쿠폰 이름")
+    @Column(name = "name", nullable = true)
+    private String name;
+
     @Comment("할인 타입")
     @Enumerated(EnumType.STRING)
     @Column(name = "discount_type", nullable = false)
@@ -64,6 +68,7 @@ public class CouponEntity extends BaseEntity {
     public Coupon toDomain() {
         return Coupon.restore(
             this.getId(),
+            this.name,
             this.type,
             this.minOrderAmount,
             this.expiredAt,
