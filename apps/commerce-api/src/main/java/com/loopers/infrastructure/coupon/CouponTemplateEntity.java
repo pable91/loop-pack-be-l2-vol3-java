@@ -29,6 +29,10 @@ public class CouponTemplateEntity extends BaseEntity {
     @Column(name = "discount_type", nullable = false)
     private DiscountType type;
 
+    @Comment("할인 값 (FIXED: 금액, RATE: 할인율%)")
+    @Column(name = "discount_value", nullable = false)
+    private Integer discountValue;
+
     @Comment("최소 주문 금액")
     @Column(name = "min_order_amount", nullable = false)
     private Integer minOrderAmount;
@@ -37,9 +41,10 @@ public class CouponTemplateEntity extends BaseEntity {
     @Column(name = "expired_at", nullable = false, updatable = false)
     private ZonedDateTime expiredAt;
 
-    private CouponTemplateEntity(String name, DiscountType type, Integer minOrderAmount, ZonedDateTime expiredAt) {
+    private CouponTemplateEntity(String name, DiscountType type, Integer discountValue, Integer minOrderAmount, ZonedDateTime expiredAt) {
         this.name = name;
         this.type = type;
+        this.discountValue = discountValue;
         this.minOrderAmount = minOrderAmount;
         this.expiredAt = expiredAt;
     }
@@ -48,18 +53,20 @@ public class CouponTemplateEntity extends BaseEntity {
         return new CouponTemplateEntity(
             template.getName().value(),
             template.getType(),
+            template.getDiscountValue(),
             template.getMinOrderAmount().value(),
             template.getExpiredAt()
         );
     }
 
     public CouponTemplate toDomain() {
-        return CouponTemplate.restore(this.getId(), this.name, this.type, this.minOrderAmount, this.expiredAt);
+        return CouponTemplate.restore(this.getId(), this.name, this.type, this.discountValue, this.minOrderAmount, this.expiredAt);
     }
 
     public void updateFrom(CouponTemplate template) {
         this.name = template.getName().value();
         this.type = template.getType();
+        this.discountValue = template.getDiscountValue();
         this.minOrderAmount = template.getMinOrderAmount().value();
     }
 }

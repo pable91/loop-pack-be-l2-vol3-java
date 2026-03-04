@@ -17,6 +17,10 @@ public class AdminCouponV1Dto {
         @NotNull(message = "할인 타입은 필수입니다")
         DiscountType discountType,
 
+        @NotNull(message = "할인 값은 필수입니다")
+        @Min(value = 1, message = "할인 값은 1 이상이어야 합니다")
+        Integer discountValue,
+
         @NotNull(message = "최소 주문 금액은 필수입니다")
         @Min(value = 0, message = "최소 주문 금액은 0 이상이어야 합니다")
         Integer minOrderAmount,
@@ -33,6 +37,10 @@ public class AdminCouponV1Dto {
         @NotNull(message = "할인 타입은 필수입니다")
         DiscountType discountType,
 
+        @NotNull(message = "할인 값은 필수입니다")
+        @Min(value = 1, message = "할인 값은 1 이상이어야 합니다")
+        Integer discountValue,
+
         @NotNull(message = "최소 주문 금액은 필수입니다")
         @Min(value = 0, message = "최소 주문 금액은 0 이상이어야 합니다")
         Integer minOrderAmount,
@@ -46,6 +54,7 @@ public class AdminCouponV1Dto {
         Long id,
         String name,
         DiscountType discountType,
+        Integer discountValue,
         Integer minOrderAmount,
         ZonedDateTime expiredAt
     ) {
@@ -54,6 +63,7 @@ public class AdminCouponV1Dto {
                 info.id(),
                 info.name(),
                 info.discountType(),
+                info.discountValue(),
                 info.minOrderAmount(),
                 info.expiredAt()
             );

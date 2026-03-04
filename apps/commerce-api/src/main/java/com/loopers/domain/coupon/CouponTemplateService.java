@@ -14,8 +14,8 @@ public class CouponTemplateService {
 
     private final CouponTemplateRepository couponTemplateRepository;
 
-    public CouponTemplate create(String name, DiscountType discountType, Integer minOrderAmount, ZonedDateTime expiredAt) {
-        CouponTemplate template = CouponTemplate.create(name, discountType, minOrderAmount, expiredAt);
+    public CouponTemplate create(String name, DiscountType discountType, Integer discountValue, Integer minOrderAmount, ZonedDateTime expiredAt) {
+        CouponTemplate template = CouponTemplate.create(name, discountType, discountValue, minOrderAmount, expiredAt);
         return couponTemplateRepository.save(template);
     }
 
@@ -28,9 +28,9 @@ public class CouponTemplateService {
         return couponTemplateRepository.findAll(CouponSearchCondition.of(page, size));
     }
 
-    public CouponTemplate update(Long id, String name, DiscountType discountType, Integer minOrderAmount, ZonedDateTime expiredAt) {
+    public CouponTemplate update(Long id, String name, DiscountType discountType, Integer discountValue, Integer minOrderAmount, ZonedDateTime expiredAt) {
         CouponTemplate template = getById(id);
-        CouponTemplate updated = template.updateTemplate(name, discountType, minOrderAmount, expiredAt);
+        CouponTemplate updated = template.updateTemplate(name, discountType, discountValue, minOrderAmount, expiredAt);
         return couponTemplateRepository.update(updated);
     }
 

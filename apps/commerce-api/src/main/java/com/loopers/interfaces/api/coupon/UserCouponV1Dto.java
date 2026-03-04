@@ -12,6 +12,7 @@ public class UserCouponV1Dto {
         Long id,
         String name,
         DiscountType discountType,
+        Integer discountValue,
         Integer minOrderAmount,
         ZonedDateTime expiredAt,
         CouponUsageType usageType
@@ -21,6 +22,7 @@ public class UserCouponV1Dto {
                 couponInfo.id(),
                 couponInfo.name(),
                 couponInfo.discountType(),
+                couponInfo.discountValue(),
                 couponInfo.minOrderAmount(),
                 couponInfo.expiredAt(),
                 couponInfo.usageType()

@@ -7,6 +7,7 @@ public record UpdateCouponTemplateCommand(
     Long couponId,
     String name,
     DiscountType discountType,
+    Integer discountValue,
     Integer minOrderAmount,
     ZonedDateTime expiredAt
 ) {

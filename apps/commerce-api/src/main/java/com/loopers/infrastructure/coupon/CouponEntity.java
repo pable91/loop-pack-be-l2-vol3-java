@@ -38,6 +38,10 @@ public class CouponEntity extends BaseEntity {
     @Column(name = "discount_type", nullable = false, updatable = false)
     private DiscountType type;
 
+    @Comment("할인 값 (스냅샷)")
+    @Column(name = "discount_value", nullable = false, updatable = false)
+    private Integer discountValue;
+
     @Comment("최소 주문 금액 (스냅샷)")
     @Column(name = "min_order_amount", nullable = false, updatable = false)
     private Integer minOrderAmount;
@@ -52,11 +56,12 @@ public class CouponEntity extends BaseEntity {
     private CouponUsageType usageType;
 
     private CouponEntity(Long refUserId, Long refTemplateId, String name, DiscountType type,
-        Integer minOrderAmount, ZonedDateTime expiredAt, CouponUsageType usageType) {
+        Integer discountValue, Integer minOrderAmount, ZonedDateTime expiredAt, CouponUsageType usageType) {
         this.refUserId = refUserId;
         this.refTemplateId = refTemplateId;
         this.name = name;
         this.type = type;
+        this.discountValue = discountValue;
         this.minOrderAmount = minOrderAmount;
         this.expiredAt = expiredAt;
         this.usageType = usageType;
@@ -68,6 +73,7 @@ public class CouponEntity extends BaseEntity {
             coupon.getRefTemplateId(),
             coupon.getName().value(),
             coupon.getType(),
+            coupon.getDiscountValue(),
             coupon.getMinOrderAmount().value(),
             coupon.getExpiredAt(),
             coupon.getUsageType()
@@ -77,7 +83,11 @@ public class CouponEntity extends BaseEntity {
     public Coupon toDomain() {
         return Coupon.restore(
             this.getId(), this.refUserId, this.refTemplateId,
-            this.name, this.type, this.minOrderAmount, this.expiredAt, this.usageType
+            this.name, this.type, this.discountValue, this.minOrderAmount, this.expiredAt, this.usageType
         );
+    }
+
+    public void markAsUsed() {
+        this.usageType = CouponUsageType.USED;
     }
 }

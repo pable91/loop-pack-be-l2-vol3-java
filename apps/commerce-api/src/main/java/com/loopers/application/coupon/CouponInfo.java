@@ -9,6 +9,7 @@ public record CouponInfo(
     Long id,
     String name,
     DiscountType discountType,
+    Integer discountValue,
     Integer minOrderAmount,
     ZonedDateTime expiredAt,
     CouponUsageType usageType
@@ -18,6 +19,7 @@ public record CouponInfo(
             coupon.getId(),
             coupon.getName().value(),
             coupon.getType(),
+            coupon.getDiscountValue(),
             coupon.getMinOrderAmount().value(),
             coupon.getExpiredAt(),
             coupon.getUsageType()

@@ -24,6 +24,14 @@ public class CouponRepositoryImpl implements CouponRepository {
     }
 
     @Override
+    public Coupon update(Coupon coupon) {
+        CouponEntity entity = couponJpaRepository.findById(coupon.getId())
+            .orElseThrow(() -> new IllegalArgumentException("Coupon not found: " + coupon.getId()));
+        entity.markAsUsed();
+        return entity.toDomain();
+    }
+
+    @Override
     public Optional<Coupon> findById(Long id) {
         return couponJpaRepository.findById(id).map(CouponEntity::toDomain);
     }

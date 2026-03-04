@@ -8,6 +8,7 @@ public record CouponTemplateInfo(
     Long id,
     String name,
     DiscountType discountType,
+    Integer discountValue,
     Integer minOrderAmount,
     ZonedDateTime expiredAt
 ) {
@@ -16,6 +17,7 @@ public record CouponTemplateInfo(
             template.getId(),
             template.getName().value(),
             template.getType(),
+            template.getDiscountValue(),
             template.getMinOrderAmount().value(),
             template.getExpiredAt()
         );

@@ -52,7 +52,7 @@ public class AdminCouponV1Controller {
         @Valid @RequestBody AdminCouponV1Dto.CreateCouponTemplateRequest request
     ) {
         CreateCouponTemplateCommand command = new CreateCouponTemplateCommand(
-            request.name(), request.discountType(), request.minOrderAmount(), request.expiredAt()
+            request.name(), request.discountType(), request.discountValue(), request.minOrderAmount(), request.expiredAt()
         );
         CouponTemplateInfo templateInfo = couponFacade.createCouponTemplate(command);
         return ApiResponse.success(AdminCouponV1Dto.CouponTemplateResponse.from(templateInfo));
@@ -65,7 +65,7 @@ public class AdminCouponV1Controller {
         @Valid @RequestBody AdminCouponV1Dto.UpdateCouponTemplateRequest request
     ) {
         UpdateCouponTemplateCommand command = new UpdateCouponTemplateCommand(
-            couponId, request.name(), request.discountType(), request.minOrderAmount(), request.expiredAt()
+            couponId, request.name(), request.discountType(), request.discountValue(), request.minOrderAmount(), request.expiredAt()
         );
         CouponTemplateInfo templateInfo = couponFacade.updateCouponTemplate(command);
         return ApiResponse.success(AdminCouponV1Dto.CouponTemplateResponse.from(templateInfo));

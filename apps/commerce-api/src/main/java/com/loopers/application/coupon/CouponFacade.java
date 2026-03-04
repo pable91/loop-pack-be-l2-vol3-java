@@ -19,7 +19,7 @@ public class CouponFacade {
     @Transactional
     public CouponTemplateInfo createCouponTemplate(CreateCouponTemplateCommand command) {
         CouponTemplate template = couponTemplateService.create(
-            command.name(), command.discountType(), command.minOrderAmount(), command.expiredAt()
+            command.name(), command.discountType(), command.discountValue(), command.minOrderAmount(), command.expiredAt()
         );
         return CouponTemplateInfo.from(template);
     }
@@ -27,7 +27,7 @@ public class CouponFacade {
     @Transactional
     public CouponTemplateInfo updateCouponTemplate(UpdateCouponTemplateCommand command) {
         CouponTemplate template = couponTemplateService.update(
-            command.couponId(), command.name(), command.discountType(), command.minOrderAmount(), command.expiredAt()
+            command.couponId(), command.name(), command.discountType(), command.discountValue(), command.minOrderAmount(), command.expiredAt()
         );
         return CouponTemplateInfo.from(template);
     }
