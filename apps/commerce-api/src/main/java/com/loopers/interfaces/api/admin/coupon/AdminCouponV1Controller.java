@@ -2,7 +2,7 @@ package com.loopers.interfaces.api.admin.coupon;
 
 import com.loopers.application.admin.AdminPrincipal;
 import com.loopers.application.coupon.CouponFacade;
-import com.loopers.application.coupon.CouponInfo;
+import com.loopers.application.coupon.CouponTemplateInfo;
 import com.loopers.application.coupon.CreateCouponTemplateCommand;
 import com.loopers.application.coupon.UpdateCouponTemplateCommand;
 import com.loopers.interfaces.api.ApiResponse;
@@ -33,8 +33,8 @@ public class AdminCouponV1Controller {
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "20") int size
     ) {
-        List<CouponInfo> couponInfos = couponFacade.getCouponTemplates(page, size);
-        return ApiResponse.success(AdminCouponV1Dto.CouponTemplateListResponse.from(couponInfos));
+        List<CouponTemplateInfo> templateInfos = couponFacade.getCouponTemplates(page, size);
+        return ApiResponse.success(AdminCouponV1Dto.CouponTemplateListResponse.from(templateInfos));
     }
 
     @GetMapping("/{couponId}")
@@ -42,8 +42,8 @@ public class AdminCouponV1Controller {
         @AdminUser AdminPrincipal admin,
         @PathVariable Long couponId
     ) {
-        CouponInfo couponInfo = couponFacade.getCouponTemplate(couponId);
-        return ApiResponse.success(AdminCouponV1Dto.CouponTemplateResponse.from(couponInfo));
+        CouponTemplateInfo templateInfo = couponFacade.getCouponTemplate(couponId);
+        return ApiResponse.success(AdminCouponV1Dto.CouponTemplateResponse.from(templateInfo));
     }
 
     @PostMapping
@@ -52,13 +52,10 @@ public class AdminCouponV1Controller {
         @Valid @RequestBody AdminCouponV1Dto.CreateCouponTemplateRequest request
     ) {
         CreateCouponTemplateCommand command = new CreateCouponTemplateCommand(
-            request.name(),
-            request.discountType(),
-            request.minOrderAmount(),
-            request.expiredAt()
+            request.name(), request.discountType(), request.minOrderAmount(), request.expiredAt()
         );
-        CouponInfo couponInfo = couponFacade.createCouponTemplate(command);
-        return ApiResponse.success(AdminCouponV1Dto.CouponTemplateResponse.from(couponInfo));
+        CouponTemplateInfo templateInfo = couponFacade.createCouponTemplate(command);
+        return ApiResponse.success(AdminCouponV1Dto.CouponTemplateResponse.from(templateInfo));
     }
 
     @PutMapping("/{couponId}")
@@ -68,14 +65,10 @@ public class AdminCouponV1Controller {
         @Valid @RequestBody AdminCouponV1Dto.UpdateCouponTemplateRequest request
     ) {
         UpdateCouponTemplateCommand command = new UpdateCouponTemplateCommand(
-            couponId,
-            request.name(),
-            request.discountType(),
-            request.minOrderAmount(),
-            request.expiredAt()
+            couponId, request.name(), request.discountType(), request.minOrderAmount(), request.expiredAt()
         );
-        CouponInfo couponInfo = couponFacade.updateCouponTemplate(command);
-        return ApiResponse.success(AdminCouponV1Dto.CouponTemplateResponse.from(couponInfo));
+        CouponTemplateInfo templateInfo = couponFacade.updateCouponTemplate(command);
+        return ApiResponse.success(AdminCouponV1Dto.CouponTemplateResponse.from(templateInfo));
     }
 
     @DeleteMapping("/{couponId}")

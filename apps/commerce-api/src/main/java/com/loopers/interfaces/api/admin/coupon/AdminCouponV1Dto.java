@@ -1,7 +1,6 @@
 package com.loopers.interfaces.api.admin.coupon;
 
-import com.loopers.application.coupon.CouponInfo;
-import com.loopers.domain.coupon.CouponUsageType;
+import com.loopers.application.coupon.CouponTemplateInfo;
 import com.loopers.domain.coupon.DiscountType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -48,17 +47,15 @@ public class AdminCouponV1Dto {
         String name,
         DiscountType discountType,
         Integer minOrderAmount,
-        ZonedDateTime expiredAt,
-        CouponUsageType usageType
+        ZonedDateTime expiredAt
     ) {
-        public static CouponTemplateResponse from(CouponInfo couponInfo) {
+        public static CouponTemplateResponse from(CouponTemplateInfo info) {
             return new CouponTemplateResponse(
-                couponInfo.id(),
-                couponInfo.name(),
-                couponInfo.discountType(),
-                couponInfo.minOrderAmount(),
-                couponInfo.expiredAt(),
-                couponInfo.usageType()
+                info.id(),
+                info.name(),
+                info.discountType(),
+                info.minOrderAmount(),
+                info.expiredAt()
             );
         }
     }
@@ -66,8 +63,8 @@ public class AdminCouponV1Dto {
     public record CouponTemplateListResponse(
         List<CouponTemplateResponse> coupons
     ) {
-        public static CouponTemplateListResponse from(List<CouponInfo> couponInfos) {
-            List<CouponTemplateResponse> responses = couponInfos.stream()
+        public static CouponTemplateListResponse from(List<CouponTemplateInfo> infos) {
+            List<CouponTemplateResponse> responses = infos.stream()
                 .map(CouponTemplateResponse::from)
                 .toList();
             return new CouponTemplateListResponse(responses);

@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
 
 /**
- * 쿠폰 DB 엔티티
+ * 발급된 쿠폰 DB 엔티티 (템플릿 스냅샷)
  */
 @Entity
 @Table(name = "coupons")
@@ -22,67 +22,62 @@ import org.hibernate.annotations.Comment;
 public class CouponEntity extends BaseEntity {
 
     @Comment("유저 id (ref)")
-    @Column(name = "ref_user_id", nullable = true)
+    @Column(name = "ref_user_id", nullable = false, updatable = false)
     private Long refUserId;
 
-    @Comment("쿠폰 이름")
-    @Column(name = "name", nullable = false)
+    @Comment("쿠폰 템플릿 id (ref)")
+    @Column(name = "ref_template_id", nullable = false, updatable = false)
+    private Long refTemplateId;
+
+    @Comment("쿠폰 이름 (스냅샷)")
+    @Column(name = "name", nullable = false, updatable = false)
     private String name;
 
-    @Comment("할인 타입")
+    @Comment("할인 타입 (스냅샷)")
     @Enumerated(EnumType.STRING)
-    @Column(name = "discount_type", nullable = false)
+    @Column(name = "discount_type", nullable = false, updatable = false)
     private DiscountType type;
+
+    @Comment("최소 주문 금액 (스냅샷)")
+    @Column(name = "min_order_amount", nullable = false, updatable = false)
+    private Integer minOrderAmount;
+
+    @Comment("만료 날짜 (스냅샷)")
+    @Column(name = "expired_at", nullable = false, updatable = false)
+    private ZonedDateTime expiredAt;
 
     @Comment("사용 상태")
     @Enumerated(EnumType.STRING)
     @Column(name = "usage_type", nullable = false)
     private CouponUsageType usageType;
 
-    @Comment("최소 주문 금액")
-    @Column(name = "min_order_amount", nullable = false)
-    private Integer minOrderAmount;
-
-    @Comment("만료 날짜")
-    @Column(name = "expired_at", nullable = false)
-    private ZonedDateTime expiredAt;
-
-    private CouponEntity(Long refUserId, String name, DiscountType type, CouponUsageType usageType, Integer minOrderAmount, ZonedDateTime expiredAt) {
+    private CouponEntity(Long refUserId, Long refTemplateId, String name, DiscountType type,
+        Integer minOrderAmount, ZonedDateTime expiredAt, CouponUsageType usageType) {
         this.refUserId = refUserId;
+        this.refTemplateId = refTemplateId;
         this.name = name;
         this.type = type;
-        this.usageType = usageType;
         this.minOrderAmount = minOrderAmount;
         this.expiredAt = expiredAt;
+        this.usageType = usageType;
     }
 
-    public static CouponEntity create(Long refUserId, Coupon coupon) {
+    public static CouponEntity create(Coupon coupon) {
         return new CouponEntity(
-            refUserId,
+            coupon.getRefUserId(),
+            coupon.getRefTemplateId(),
             coupon.getName().value(),
             coupon.getType(),
-            coupon.getUsageType(),
             coupon.getMinOrderAmount().value(),
-            coupon.getExpiredAt()
+            coupon.getExpiredAt(),
+            coupon.getUsageType()
         );
     }
 
     public Coupon toDomain() {
         return Coupon.restore(
-            this.getId(),
-            this.name,
-            this.type,
-            this.minOrderAmount,
-            this.expiredAt,
-            this.usageType
+            this.getId(), this.refUserId, this.refTemplateId,
+            this.name, this.type, this.minOrderAmount, this.expiredAt, this.usageType
         );
-    }
-
-    public void updateFrom(Coupon coupon) {
-        this.name = coupon.getName().value();
-        this.type = coupon.getType();
-        this.minOrderAmount = coupon.getMinOrderAmount().value();
-        this.expiredAt = coupon.getExpiredAt();
-        // usageType, refUserId 는 템플릿 수정에서는 변경하지 않음
     }
 }

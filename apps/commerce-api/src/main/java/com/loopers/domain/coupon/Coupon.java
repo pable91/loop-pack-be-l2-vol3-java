@@ -8,19 +8,24 @@ import com.loopers.support.error.ErrorType;
 import java.time.ZonedDateTime;
 
 /**
- *  Coupon 도메인 객체
+ * 발급된 쿠폰 도메인 객체 (템플릿 스냅샷)
  */
 public class Coupon {
 
     private final Long id;
+    private final Long refUserId;
+    private final Long refTemplateId;
     private final Name name;
     private final DiscountType type;
     private final Money minOrderAmount;
     private final ZonedDateTime expiredAt;
     private final CouponUsageType usageType;
 
-    private Coupon(Long id, Name name, DiscountType type, Money minOrderAmount, ZonedDateTime expiredAt, CouponUsageType usageType) {
+    private Coupon(Long id, Long refUserId, Long refTemplateId, Name name, DiscountType type,
+        Money minOrderAmount, ZonedDateTime expiredAt, CouponUsageType usageType) {
         this.id = id;
+        this.refUserId = refUserId;
+        this.refTemplateId = refTemplateId;
         this.name = name;
         this.type = type;
         this.minOrderAmount = minOrderAmount;
@@ -28,73 +33,28 @@ public class Coupon {
         this.usageType = usageType;
     }
 
-    public static Coupon create(String name, DiscountType discountType, Integer minOrderAmount, ZonedDateTime expiredAt) {
-        validateDiscountType(discountType);
-        validateExpiredAt(expiredAt);
-
-        return new Coupon(null, new Name(name), discountType, new Money(minOrderAmount), expiredAt, CouponUsageType.AVAILABLE);
-    }
-
-    /**
-     * 쿠폰 템플릿 수정
-     * - 이름, 할인 타입, 최소 주문 금액, 만료 일시를 변경한다.
-     * - ID와 사용 상태는 그대로 유지한다.
-     */
-    public Coupon updateTemplate(String name, DiscountType discountType, Integer minOrderAmount, ZonedDateTime expiredAt) {
-        validateDiscountType(discountType);
-        validateExpiredAt(expiredAt);
-
+    public static Coupon issue(Long refUserId, CouponTemplate template) {
+        if (refUserId == null || refUserId <= 0) {
+            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Coupon.USER_ID_INVALID);
+        }
         return new Coupon(
-            this.id,
-            new Name(name),
-            discountType,
-            new Money(minOrderAmount),
-            expiredAt,
-            this.usageType
+            null, refUserId, template.getId(),
+            template.getName(), template.getType(), template.getMinOrderAmount(), template.getExpiredAt(),
+            CouponUsageType.AVAILABLE
         );
     }
 
-    private static void validateDiscountType(DiscountType discountType) {
-        if (discountType == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Coupon.DISCOUNT_TYPE_REQUIRED);
-        }
+    public static Coupon restore(Long id, Long refUserId, Long refTemplateId, String name, DiscountType type,
+        Integer minOrderAmount, ZonedDateTime expiredAt, CouponUsageType usageType) {
+        return new Coupon(id, refUserId, refTemplateId, new Name(name), type, new Money(minOrderAmount), expiredAt, usageType);
     }
 
-    private static void validateExpiredAt(ZonedDateTime expiredAt) {
-        if (expiredAt == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Coupon.EXPIRED_AT_REQUIRED);
-        }
-        if (expiredAt.isBefore(ZonedDateTime.now())) {
-            throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Coupon.EXPIRED_AT_MUST_BE_FUTURE);
-        }
-    }
-
-    public static Coupon restore(Long id, String name, DiscountType type, Integer minOrderAmount, ZonedDateTime expiredAt,
-        CouponUsageType usageType) {
-        return new Coupon(id, new Name(name), type, new Money(minOrderAmount), expiredAt, usageType);
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public Name getName() {
-        return name;
-    }
-
-    public DiscountType getType() {
-        return type;
-    }
-
-    public Money getMinOrderAmount() {
-        return minOrderAmount;
-    }
-
-    public ZonedDateTime getExpiredAt() {
-        return expiredAt;
-    }
-
-    public CouponUsageType getUsageType() {
-        return usageType;
-    }
+    public Long getId() { return id; }
+    public Long getRefUserId() { return refUserId; }
+    public Long getRefTemplateId() { return refTemplateId; }
+    public Name getName() { return name; }
+    public DiscountType getType() { return type; }
+    public Money getMinOrderAmount() { return minOrderAmount; }
+    public ZonedDateTime getExpiredAt() { return expiredAt; }
+    public CouponUsageType getUsageType() { return usageType; }
 }
