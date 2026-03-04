@@ -14,16 +14,31 @@ Content-Type: application/json
 X-Admin-Id: admin001
 X-Admin-Token: admin-secret-token
 
-### 쿠폰 템플릿 생성
+### 쿠폰 템플릿 생성 (정액 할인)
 POST {{commerce-api}}/api-admin/v1/coupons
 Content-Type: application/json
 X-Admin-Id: admin001
 X-Admin-Token: admin-secret-token
 
 {
-  "name": "신규 가입 할인 쿠폰",
-  "discountType": "FIXED_AMOUNT",
+  "name": "신규 가입 1000원 할인 쿠폰",
+  "discountType": "FIXED",
+  "discountValue": 1000,
   "minOrderAmount": 10000,
+  "expiredAt": "2025-12-31T23:59:59+09:00"
+}
+
+### 쿠폰 템플릿 생성 (정률 할인)
+POST {{commerce-api}}/api-admin/v1/coupons
+Content-Type: application/json
+X-Admin-Id: admin001
+X-Admin-Token: admin-secret-token
+
+{
+  "name": "10% 할인 쿠폰",
+  "discountType": "RATE",
+  "discountValue": 10,
+  "minOrderAmount": 5000,
   "expiredAt": "2025-12-31T23:59:59+09:00"
 }
 
@@ -35,7 +50,8 @@ X-Admin-Token: admin-secret-token
 
 {
   "name": "수정된 쿠폰 이름",
-  "discountType": "PERCENTAGE",
+  "discountType": "RATE",
+  "discountValue": 15,
   "minOrderAmount": 20000,
   "expiredAt": "2026-06-30T23:59:59+09:00"
 }
