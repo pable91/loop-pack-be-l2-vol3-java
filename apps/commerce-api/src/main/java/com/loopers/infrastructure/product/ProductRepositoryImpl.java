@@ -75,4 +75,14 @@ public class ProductRepositoryImpl implements ProductRepository {
             case LIKES_DESC -> productEntity.likeCount.desc();
         };
     }
+
+    @Override
+    public void incrementLikeCount(Long id) {
+        productJpaRepository.incrementLikeCount(id);
+    }
+
+    @Override
+    public void decrementLikeCount(Long id) {
+        productJpaRepository.decrementLikeCount(id);
+    }
 }

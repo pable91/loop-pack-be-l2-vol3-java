@@ -40,6 +40,7 @@ public class ProductEntity extends BaseEntity {
         this.name = product.getName().value();
         this.refBrandId = product.getRefBrandId();
         this.price = product.getPrice().value();
+        this.stock = product.getStock();
         this.likeCount = product.getLikeCount();
     }
 
@@ -63,6 +64,7 @@ public class ProductEntity extends BaseEntity {
         this.refBrandId = product.getRefBrandId();
         this.price = product.getPrice().value();
         this.stock = product.getStock();
+        this.likeCount = product.getLikeCount();
     }
 
     public String getName() {

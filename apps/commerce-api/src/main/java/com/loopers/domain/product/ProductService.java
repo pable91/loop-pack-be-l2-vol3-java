@@ -39,15 +39,11 @@ public class ProductService {
     }
 
     public void increaseLikeCount(Long productId) {
-        Product product = getById(productId);
-        product.increaseLikeCount();
-        productRepository.update(product);
+        productRepository.incrementLikeCount(productId);
     }
 
     public void decreaseLikeCount(Long productId) {
-        Product product = getById(productId);
-        product.decreaseLikeCount();
-        productRepository.update(product);
+        productRepository.decrementLikeCount(productId);
     }
 
     public void decreaseStock(Long productId, Integer decreaseStock) {

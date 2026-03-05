@@ -14,4 +14,8 @@ public interface ProductRepository {
     Product update(Product product);
 
     List<Product> findAll(ProductSearchCondition condition);
+
+    void incrementLikeCount(Long id);
+
+    void decrementLikeCount(Long id);
 }
