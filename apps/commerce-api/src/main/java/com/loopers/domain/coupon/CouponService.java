@@ -8,6 +8,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -15,11 +16,13 @@ public class CouponService {
 
     private final CouponRepository couponRepository;
 
+    @Transactional
     public Coupon issue(Long userId, CouponTemplate template) {
         Coupon coupon = Coupon.issue(userId, template);
         return couponRepository.save(coupon);
     }
 
+    @Transactional(readOnly = true)
     public Coupon getById(Long id) {
         return couponRepository.findById(id)
             .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, ErrorMessage.Coupon.COUPON_NOT_FOUND));
@@ -31,6 +34,7 @@ public class CouponService {
      * - 할인 금액 계산
      * - 쿠폰 사용 처리
      */
+    @Transactional
     public CouponApplyResult applyToOrder(Long couponId, Long userId, Money orderAmount) {
         if (couponId == null) {
             return CouponApplyResult.none();
@@ -44,11 +48,13 @@ public class CouponService {
         return new CouponApplyResult(coupon.getId(), discountAmount);
     }
 
+    @Transactional
     public Coupon use(Coupon coupon) {
         coupon.use();
         return couponRepository.update(coupon);
     }
 
+    @Transactional(readOnly = true)
     public List<Coupon> findByUserId(Long userId) {
         return couponRepository.findByUserId(userId);
     }

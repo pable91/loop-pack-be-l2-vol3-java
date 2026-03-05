@@ -2,11 +2,19 @@ package com.loopers.domain.concurrency;
 
 import com.loopers.domain.brand.Brand;
 import com.loopers.domain.brand.BrandService;
+import com.loopers.domain.common.Money;
+import com.loopers.domain.coupon.Coupon;
+import com.loopers.domain.coupon.CouponService;
+import com.loopers.domain.coupon.CouponTemplate;
+import com.loopers.domain.coupon.CouponTemplateService;
+import com.loopers.domain.coupon.CouponUsageType;
+import com.loopers.domain.coupon.DiscountType;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductService;
 import com.loopers.infrastructure.product.ProductEntity;
 import com.loopers.infrastructure.product.ProductJpaRepository;
 import com.loopers.utils.DatabaseCleanUp;
+import java.time.ZonedDateTime;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,6 +44,12 @@ class ConcurrencyIssueTest {
 
     @Autowired
     private ProductJpaRepository productJpaRepository;
+
+    @Autowired
+    private CouponService couponService;
+
+    @Autowired
+    private CouponTemplateService couponTemplateService;
 
     @Autowired
     private DatabaseCleanUp databaseCleanUp;
@@ -105,6 +119,60 @@ class ConcurrencyIssueTest {
             System.out.println("예상: " + threadCount + ", 실제: " + product.getLikeCount());
             // 원자적 UPDATE로 인해 정확한 카운트 유지
             assertThat(product.getLikeCount()).isEqualTo(threadCount);
+        }
+    }
+
+    @Nested
+    @DisplayName("쿠폰 중복 사용 동시성 문제")
+    class CouponDuplicateUsageTest {
+
+        @Test
+        @DisplayName("동시에 10명이 같은 쿠폰을 사용하면 중복 사용 발생")
+        void concurrency_coupon_duplicate_usage_test() throws InterruptedException {
+            // Given
+            Long userId = 1L;
+            CouponTemplate template = couponTemplateService.create(
+                "테스트 쿠폰", DiscountType.FIXED, 1000, 5000, ZonedDateTime.now().plusDays(7)
+            );
+            Coupon coupon = couponService.issue(userId, template);
+            Long couponId = coupon.getId();
+
+            int threadCount = 10;
+            ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+            CountDownLatch startLatch = new CountDownLatch(1);
+            CountDownLatch finishLatch = new CountDownLatch(threadCount);
+            AtomicInteger successCount = new AtomicInteger(0);
+            AtomicInteger failureCount = new AtomicInteger(0);
+
+            Money orderAmount = new Money(10000);
+
+            // When
+            for (int i = 0; i < threadCount; i++) {
+                executor.submit(() -> {
+                    try {
+                        startLatch.await();
+                        couponService.applyToOrder(couponId, userId, orderAmount);
+                        successCount.incrementAndGet();
+                    } catch (Exception e) {
+                        failureCount.incrementAndGet();
+                    } finally {
+                        finishLatch.countDown();
+                    }
+                });
+            }
+
+            Thread.sleep(100);
+            startLatch.countDown();
+            finishLatch.await();
+            executor.shutdown();
+
+            // Then
+            Coupon usedCoupon = couponService.getById(couponId);
+            System.out.println("성공: " + successCount.get() + ", 실패: " + failureCount.get());
+            System.out.println("쿠폰 상태: " + usedCoupon.getUsageType());
+
+            assertThat(usedCoupon.getUsageType()).isEqualTo(CouponUsageType.USED);
+            assertThat(successCount.get()).isGreaterThan(1);
         }
     }
 }
