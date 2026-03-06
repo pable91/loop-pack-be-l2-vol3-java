@@ -9,6 +9,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.ZonedDateTime;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
@@ -54,6 +55,10 @@ public class CouponEntity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "usage_type", nullable = false)
     private CouponUsageType usageType;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
 
     private CouponEntity(Long refUserId, Long refTemplateId, String name, DiscountType type,
         Integer discountValue, Integer minOrderAmount, ZonedDateTime expiredAt, CouponUsageType usageType) {

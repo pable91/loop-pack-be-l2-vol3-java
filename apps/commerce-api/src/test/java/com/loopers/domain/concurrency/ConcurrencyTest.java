@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * read-modify-write 패턴에서 발생하는 Lost Update 문제를 검증합니다.
  */
 @SpringBootTest
-class ConcurrencyIssueTest {
+class ConcurrencyTest {
 
     @Autowired
     private ProductService productService;
@@ -123,12 +123,12 @@ class ConcurrencyIssueTest {
     }
 
     @Nested
-    @DisplayName("쿠폰 중복 사용 동시성 문제")
+    @DisplayName("쿠폰 중복 사용 동시성 테스트")
     class CouponDuplicateUsageTest {
 
         @Test
-        @DisplayName("동시에 10명이 같은 쿠폰을 사용하면 중복 사용 발생")
-        void concurrency_coupon_duplicate_usage_test() throws InterruptedException {
+        @DisplayName(" 동일한 쿠폰으로 여러 기기에서 동시에 주문해도, 쿠폰은 단 한 번만 사용된다")
+        void concurrency_optimistic_lock_prevents_duplicate_usage() throws InterruptedException {
             // Given
             Long userId = 1L;
             CouponTemplate template = couponTemplateService.create(
@@ -172,7 +172,8 @@ class ConcurrencyIssueTest {
             System.out.println("쿠폰 상태: " + usedCoupon.getUsageType());
 
             assertThat(usedCoupon.getUsageType()).isEqualTo(CouponUsageType.USED);
-            assertThat(successCount.get()).isGreaterThan(1);
+            assertThat(successCount.get()).isEqualTo(1);
+            assertThat(failureCount.get()).isEqualTo(threadCount - 1);
         }
     }
 }
