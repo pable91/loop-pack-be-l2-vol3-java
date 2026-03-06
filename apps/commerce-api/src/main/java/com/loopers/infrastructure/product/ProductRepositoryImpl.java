@@ -37,6 +37,12 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
+    public Optional<Product> findByIdWithLock(Long id) {
+        return productJpaRepository.findByIdWithLock(id)
+            .map(ProductEntity::toDomain);
+    }
+
+    @Override
     public List<Product> findByIds(List<Long> ids) {
         return productJpaRepository.findAllById(ids).stream()
             .map(ProductEntity::toDomain)

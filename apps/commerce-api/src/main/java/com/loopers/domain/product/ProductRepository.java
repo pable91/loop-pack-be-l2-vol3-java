@@ -9,6 +9,8 @@ public interface ProductRepository {
 
     Optional<Product> findById(Long id);
 
+    Optional<Product> findByIdWithLock(Long id);
+
     List<Product> findByIds(List<Long> ids);
 
     Product update(Product product);

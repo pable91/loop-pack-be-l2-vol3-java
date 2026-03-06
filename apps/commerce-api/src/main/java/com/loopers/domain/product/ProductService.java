@@ -52,7 +52,8 @@ public class ProductService {
 
     @Transactional
     public void decreaseStock(Long productId, Integer decreaseStock) {
-        Product product = getById(productId);
+        Product product = productRepository.findByIdWithLock(productId)
+            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, ErrorMessage.Product.PRODUCT_NOT_FOUND));
         product.decreaseStock(decreaseStock);
         productRepository.update(product);
     }

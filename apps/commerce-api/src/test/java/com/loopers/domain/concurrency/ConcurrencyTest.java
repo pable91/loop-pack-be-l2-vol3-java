@@ -123,6 +123,53 @@ class ConcurrencyTest {
     }
 
     @Nested
+    @DisplayName("재고 차감 동시성 테스트")
+    class StockConcurrencyTest {
+
+        @Test
+        @DisplayName("재고보다 많은 주문이 동시에 들어와도, 재고만큼만 성공하고 나머지는 재고 부족 에러를 받는다")
+        void concurrency_pessimistic_lock_prevents_overselling() throws InterruptedException {
+            // Given: 재고 10, 스레드 30개 (각 1개씩 주문)
+            int stock = 10;
+            int threadCount = 30;
+            ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+            CountDownLatch startLatch = new CountDownLatch(1);
+            CountDownLatch finishLatch = new CountDownLatch(threadCount);
+            AtomicInteger successCount = new AtomicInteger(0);
+            AtomicInteger failureCount = new AtomicInteger(0);
+
+            // When
+            for (int i = 0; i < threadCount; i++) {
+                executor.submit(() -> {
+                    try {
+                        startLatch.await();
+                        productService.decreaseStock(productId, 1);
+                        successCount.incrementAndGet();
+                    } catch (Exception e) {
+                        failureCount.incrementAndGet();
+                    } finally {
+                        finishLatch.countDown();
+                    }
+                });
+            }
+
+            Thread.sleep(100);
+            startLatch.countDown();
+            finishLatch.await();
+            executor.shutdown();
+
+            // Then
+            Product product = productService.getById(productId);
+            System.out.println("성공: " + successCount.get() + ", 실패: " + failureCount.get());
+            System.out.println("예상 재고: 0, 실제 재고: " + product.getStock());
+
+            assertThat(product.getStock()).isEqualTo(0);
+            assertThat(successCount.get()).isEqualTo(stock);
+            assertThat(failureCount.get()).isEqualTo(threadCount - stock);
+        }
+    }
+
+    @Nested
     @DisplayName("쿠폰 중복 사용 동시성 테스트")
     class CouponDuplicateUsageTest {
 
@@ -137,7 +184,7 @@ class ConcurrencyTest {
             Coupon coupon = couponService.issue(userId, template);
             Long couponId = coupon.getId();
 
-            int threadCount = 10;
+            int threadCount = 100;
             ExecutorService executor = Executors.newFixedThreadPool(threadCount);
             CountDownLatch startLatch = new CountDownLatch(1);
             CountDownLatch finishLatch = new CountDownLatch(threadCount);
