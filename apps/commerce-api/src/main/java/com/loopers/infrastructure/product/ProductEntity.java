@@ -15,7 +15,9 @@ import org.hibernate.annotations.Comment;
 @Entity
 @Table(name = "product", indexes = {
     @Index(name = "idx_product_brand_like", columnList = "ref_brand_id, like_count DESC"),
-    @Index(name = "idx_product_like", columnList = "like_count DESC")
+    @Index(name = "idx_product_like", columnList = "like_count DESC"),
+    @Index(name = "idx_product_brand_latest", columnList = "ref_brand_id, created_at DESC"),
+    @Index(name = "idx_product_latest", columnList = "created_at DESC")
 })
 @NoArgsConstructor
 public class ProductEntity extends BaseEntity {
