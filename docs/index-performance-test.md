@@ -77,13 +77,17 @@ Extra: Using where; Using filesort
 | B | 100 | 1,000 | 중형 브랜드 |
 | C | 1,000 | 100 | 소형 브랜드 다수 |
 
-**인덱스 조합:** 4가지 (없음, ref_brand_id, like_count, 복합)
+**인덱스 조합:**
+- 좋아요순: 4가지 (없음, ref_brand_id, like_count, 복합)
+- 최신순: 3가지 (없음, created_at, 복합)
 
 **쿼리 패턴:**
 - Q1: 브랜드 필터 + 좋아요순
 - Q2: 전체 좋아요순 (브랜드 필터 없음)
+- Q3: 브랜드 필터 + 최신순
+- Q4: 전체 최신순 (브랜드 필터 없음)
 
-왜 Q2도 테스트할까? → API에서 `brandId`가 선택적 파라미터라서 둘 다 사용될 수 있다.
+왜 Q2, Q4도 테스트할까? → API에서 `brandId`가 선택적 파라미터라서 둘 다 사용될 수 있다.
 
 ---
 
@@ -106,6 +110,22 @@ Extra: Using where; Using filesort
 | ref_brand_id | 32.1 | 29.6 | 30.1 |
 | like_count | **0.05** | **0.05** | **0.05** |
 | 복합 | 33.6 | 21.4 | 33.2 |
+
+### Q3: 브랜드 필터 + 최신순 (단위: ms)
+
+| 인덱스 | 결과 | 비고 |
+|--------|------|------|
+| 없음 | 0.31 | brand 인덱스 사용 + filesort |
+| created_at | 0.27 | brand 인덱스 사용 + filesort |
+| 복합 (brand, created_at) | **0.04** ✅ | filesort 없음 |
+
+### Q4: 전체 최신순 (단위: ms)
+
+| 인덱스 | 결과 | 비고 |
+|--------|------|------|
+| 없음 | 22.2 | 풀 테이블 스캔 |
+| created_at | **0.05** ✅ | 인덱스 스캔 |
+| 복합 (brand, created_at) | 0.03 | created_at 인덱스 사용 |
 
 ---
 
@@ -178,6 +198,46 @@ Table scan (100,000 rows)
 ```
 
 복합 인덱스 `(ref_brand_id, like_count)`는 `ref_brand_id` 조건이 없으면 사용할 수 없다.
+
+### 발견 4: 최신순도 동일한 패턴
+
+Q3, Q4 테스트 결과 최신순(created_at) 정렬도 좋아요순과 동일한 패턴을 보인다.
+
+**Q3 (브랜드 필터 + 최신순)**
+
+인덱스 없을 때:
+```
+Index lookup by brand_id (100 rows)
+  → Sort by created_at DESC
+    → Limit 10
+⏱️ 0.31ms
+```
+
+복합 인덱스 `(brand_id, created_at DESC)` 적용 후:
+```
+Index lookup by brand_id + created_at (10 rows)
+  → Limit 10
+⏱️ 0.04ms
+```
+
+**Q4 (전체 최신순)**
+
+인덱스 없을 때:
+```
+Table scan (100,000 rows)
+  → Sort by created_at DESC
+    → Limit 10
+⏱️ 22.2ms
+```
+
+`created_at` 단일 인덱스 적용 후:
+```
+Index scan by created_at (10 rows)
+  → Limit 10
+⏱️ 0.05ms
+```
+
+**결론**: 좋아요순과 마찬가지로 최신순도 복합 인덱스 + 단일 인덱스 조합이 필요하다.
 
 ---
 
@@ -295,18 +355,80 @@ UPDATE data
 
 ### 적용할 인덱스
 
+처음에는 좋아요순만 고려해서 2개 인덱스를 설계했다:
+
 ```sql
 -- Q1 커버: 브랜드 필터 + 좋아요순
-CREATE INDEX idx_brand_like ON product(ref_brand_id, like_count DESC);
+CREATE INDEX idx_product_brand_like ON product(ref_brand_id, like_count DESC);
 
 -- Q2 커버: 전체 좋아요순
-CREATE INDEX idx_like_count ON product(like_count DESC);
+CREATE INDEX idx_product_like ON product(like_count DESC);
 ```
+
+### 추가 인덱스가 필요한가?
+
+잠깐, API를 다시 확인해보자.
+
+```java
+@RequestParam(defaultValue = "LATEST") ProductSortType sortType
+```
+
+**기본 정렬이 최신순(LATEST)이다!** 그리고 정렬 옵션이 3가지가 있다:
+
+```java
+case LATEST -> productEntity.createdAt.desc();    // 최신순
+case PRICE_ASC -> productEntity.price.asc();      // 가격순
+case LIKES_DESC -> productEntity.likeCount.desc(); // 좋아요순
+```
+
+현재 인덱스는 좋아요순만 커버한다. 최신순과 가격순은?
+
+### 우선순위 결정
+
+| 정렬 | 사용 빈도 | 인덱스 필요성 |
+|------|----------|-------------|
+| 최신순 (LATEST) | ⭐ 기본값이므로 가장 많이 호출 | **필수** |
+| 좋아요순 (LIKES_DESC) | 이미 구현됨 | ✅ 있음 |
+| 가격순 (PRICE_ASC) | 사용 빈도 불명 | 보류 |
+
+**최신순이 기본값**이므로 가장 많이 호출될 가능성이 높다. 인덱스 없이 방치하면 안 된다.
+
+가격순은 실제 트래픽을 보고 나중에 결정해도 된다.
+
+### 최종 적용 인덱스 (4개)
+
+```sql
+-- 좋아요순
+CREATE INDEX idx_product_brand_like ON product(ref_brand_id, like_count DESC);
+CREATE INDEX idx_product_like ON product(like_count DESC);
+
+-- 최신순 (추가)
+CREATE INDEX idx_product_brand_latest ON product(ref_brand_id, created_at DESC);
+CREATE INDEX idx_product_latest ON product(created_at DESC);
+```
+
+| 인덱스 | 커버하는 쿼리 |
+|--------|-------------|
+| `idx_product_brand_like` | 브랜드 필터 + 좋아요순 |
+| `idx_product_like` | 전체 좋아요순 |
+| `idx_product_brand_latest` | 브랜드 필터 + 최신순 |
+| `idx_product_latest` | 전체 최신순 |
+
+### 가격순은 왜 안 만들었나?
+
+- 인덱스가 많아지면 쓰기 성능 저하 (테스트에서 25% 느려짐 확인)
+- 가격순의 실제 사용 빈도를 모름
+- 필요하면 나중에 추가해도 됨
+
+**트레이드오프**: 모든 경우를 커버하는 6개 인덱스 vs 핵심만 커버하는 4개 인덱스
+
+→ 쓰기 성능을 고려해서 **4개로 시작**하고, 모니터링 후 필요하면 추가한다.
 
 ### 남은 고려사항
 
 - 깊은 페이지네이션은 커서 기반으로 변경 검토
 - 좋아요가 매우 빈번하면 Redis 캐시 검토
+- 가격순 정렬 사용량 모니터링 후 인덱스 추가 검토
 
 ---
 
