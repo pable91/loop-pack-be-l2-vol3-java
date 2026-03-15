@@ -91,6 +91,9 @@ public final class ErrorMessage {
         public static final String USER_ID_INVALID = "유저FK는 null이거나 0이하가 될 수 없습니다";
         public static final String ORDER_DT_REQUIRED = "주문 일시는 필수입니다";
         public static final String CANCEL_ONLY_WHEN_COMPLETED = "주문 완료 상태에서만 취소할 수 있습니다";
+        public static final String ALREADY_CANCELLED = "이미 취소된 주문입니다";
+        public static final String CONFIRM_ONLY_WHEN_PENDING = "결제 대기 상태에서만 결제 확정할 수 있습니다";
+        public static final String ORDER_NOT_FOUND = "주문을 찾을 수 없습니다";
         public static final String QUANTITY_MUST_BE_POSITIVE = "수량은 양수여야 합니다";
     }
 
