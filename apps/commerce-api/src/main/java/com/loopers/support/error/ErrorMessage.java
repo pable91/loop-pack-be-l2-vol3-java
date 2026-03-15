@@ -128,6 +128,18 @@ public final class ErrorMessage {
     }
 
     /**
+     * Payment 도메인 관련 에러 메시지
+     */
+    public static final class Payment {
+        private Payment() {}
+
+        public static final String ORDER_ID_INVALID = "주문FK는 null이거나 0이하가 될 수 없습니다";
+        public static final String ALREADY_PROCESSED = "이미 처리된 결제입니다";
+        public static final String PG_TRANSACTION_ID_REQUIRED = "PG 거래 ID는 필수입니다";
+        public static final String PAYMENT_NOT_FOUND = "결제 정보를 찾을 수 없습니다";
+    }
+
+    /**
      * Example 도메인 관련 에러 메시지
      */
     public static final class Example {
