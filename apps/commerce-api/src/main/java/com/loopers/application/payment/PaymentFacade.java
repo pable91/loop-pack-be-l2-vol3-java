@@ -67,6 +67,36 @@ public class PaymentFacade {
         return PaymentInfo.from(payment, order);
     }
 
+    /**
+     * PG 콜백 수신
+     * 1. Payment 조회
+     * 2. 결과에 따라 Payment 상태 업데이트
+     * 3. 성공 시 Order 상태도 CONFIRMED로 변경
+     */
+    @Transactional
+    public PaymentInfo handleCallback(PaymentCallbackCommand command) {
+        Payment payment = paymentRepository.findByOrderId(command.orderId())
+            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, ErrorMessage.Payment.PAYMENT_NOT_FOUND));
+
+        Order order = getOrder(command.orderId());
+
+        if (command.isSuccess()) {
+            payment.markSuccess(command.transactionKey());
+            paymentRepository.save(payment);
+
+            order.confirm();
+            orderRepository.save(order);
+
+            log.info("결제 성공. orderId={}, transactionKey={}", command.orderId(), command.transactionKey());
+        } else {
+            payment.markFailed(command.reason());
+            paymentRepository.save(payment);
+
+            log.info("결제 실패. orderId={}, reason={}", command.orderId(), command.reason());
+        }
+
+        return PaymentInfo.from(payment, order);
+    }
 
     private Order getOrder(Long orderId) {
         return orderRepository.findById(orderId)

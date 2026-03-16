@@ -40,4 +40,19 @@ public class PaymentV1Controller {
         return ApiResponse.success(PaymentV1Dto.PaymentResponse.from(paymentInfo));
     }
 
+    @PostMapping("/payments/callback")
+    public ApiResponse<PaymentV1Dto.PaymentResponse> handleCallback(
+        @RequestBody PaymentV1Dto.CallbackRequest request
+    ) {
+        log.info("PG 콜백 수신. orderId={}, status={}", request.orderId(), request.status());
+
+        PaymentCallbackCommand command = new PaymentCallbackCommand(
+            Long.parseLong(request.orderId()),
+            request.transactionKey(),
+            request.status(),
+            request.reason()
+        );
+        PaymentInfo paymentInfo = paymentFacade.handleCallback(command);
+        return ApiResponse.success(PaymentV1Dto.PaymentResponse.from(paymentInfo));
+    }
 }
