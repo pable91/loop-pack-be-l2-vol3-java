@@ -5,11 +5,13 @@ import com.loopers.domain.payment.PgPaymentRequest;
 import com.loopers.domain.payment.PgPaymentResponse;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
@@ -36,6 +38,7 @@ public class PgClientImpl implements PgClient {
             .build();
     }
 
+    @CircuitBreaker(name = "pg", fallbackMethod = "fallback")
     @Retry(name = "pg")
     @Override
     public PgPaymentResponse requestPayment(PgPaymentRequest request) {
@@ -77,6 +80,15 @@ public class PgClientImpl implements PgClient {
             log.error("PG 호출 실패. request={}", request, e);
             throw new CoreException(ErrorType.INTERNAL_ERROR, "PG 호출에 실패했습니다.");
         }
+    }
+
+    private PgPaymentResponse fallback(PgPaymentRequest request, Throwable t) {
+        if (t instanceof CallNotPermittedException) {
+            log.error("PG 서킷 브레이커 OPEN. request={}", request, t);
+            throw new CoreException(ErrorType.INTERNAL_ERROR, "현재 결제 서비스가 일시적으로 불가합니다.");
+        }
+        log.error("PG 호출 최종 실패. request={}", request, t);
+        throw new CoreException(ErrorType.INTERNAL_ERROR, "PG 호출에 실패했습니다.");
     }
 
     private record PgRequestBody(

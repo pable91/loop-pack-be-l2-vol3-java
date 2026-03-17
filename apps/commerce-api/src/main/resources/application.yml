@@ -39,6 +39,14 @@ resilience4j:
         exponentialBackoffMultiplier: 2
         retryExceptions:
           - com.loopers.infrastructure.payment.PgConnectionException
+  circuitbreaker:
+    instances:
+      pg:
+        slidingWindowType: TIME_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
 
 ---
 spring:
