@@ -8,9 +8,15 @@ import com.loopers.support.error.ErrorType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+
+import java.net.ConnectException;
+import java.time.Duration;
 
 @Slf4j
 @Component
@@ -19,8 +25,13 @@ public class PgClientImpl implements PgClient {
     private final RestClient restClient;
 
     public PgClientImpl(@Value("${pg.url:http://localhost:8082}") String pgUrl) {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(1));
+        factory.setReadTimeout(Duration.ofSeconds(1));
+
         this.restClient = RestClient.builder()
             .baseUrl(pgUrl)
+            .requestFactory(factory)
             .build();
     }
 
@@ -50,9 +61,19 @@ public class PgClientImpl implements PgClient {
                 response.data().status(),
                 response.data().reason()
             );
+        } catch (ResourceAccessException e) {
+            if (e.getCause() instanceof ConnectException) {
+                log.error("PG 연결 실패. request={}", request, e);
+                throw new PgConnectionException();
+            }
+            log.error("PG 타임아웃. request={}", request, e);
+            throw new CoreException(ErrorType.INTERNAL_ERROR, "PG 응답 시간이 초과됐습니다.");
+        } catch (HttpServerErrorException e) {
+            log.error("PG 서버 오류. request={}", request, e);
+            throw new PgConnectionException();
         } catch (RestClientException e) {
             log.error("PG 호출 실패. request={}", request, e);
-            throw new CoreException(ErrorType.INTERNAL_ERROR, "PG 호출에 실패했습니다");
+            throw new CoreException(ErrorType.INTERNAL_ERROR, "PG 호출에 실패했습니다.");
         }
     }
 
