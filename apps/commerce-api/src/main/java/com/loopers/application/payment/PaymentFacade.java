@@ -54,15 +54,9 @@ public class PaymentFacade {
             callbackUrl
         );
 
-        try {
-            PgPaymentResponse pgResponse = pgClient.requestPayment(pgRequest);
-            log.info("PG 결제 요청 완료. transactionKey={}, status={}",
-                pgResponse.transactionKey(), pgResponse.status());
-        } catch (Exception e) {
-            log.error("PG 결제 요청 실패. orderId={}", order.getId(), e);
-            paymentService.markFailed(payment.getId(), e.getMessage());
-            throw e;
-        }
+        PgPaymentResponse pgResponse = pgClient.requestPayment(pgRequest);
+        log.info("PG 결제 요청 완료. transactionKey={}, status={}",
+            pgResponse.transactionKey(), pgResponse.status());
 
         return PaymentInfo.from(payment, order);
     }
