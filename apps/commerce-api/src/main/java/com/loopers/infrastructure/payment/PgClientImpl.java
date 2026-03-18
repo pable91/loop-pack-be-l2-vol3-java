@@ -20,6 +20,7 @@ import org.springframework.web.client.RestClientException;
 
 import java.net.ConnectException;
 import java.time.Duration;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -82,6 +83,28 @@ public class PgClientImpl implements PgClient {
         }
     }
 
+    @Override
+    public List<PgPaymentResponse> getPaymentsByOrderId(String userId, String orderId) {
+        try {
+            PgOrderApiResponse response = restClient.get()
+                .uri("/api/v1/payments?orderId={orderId}", orderId)
+                .header("X-USER-ID", userId)
+                .retrieve()
+                .body(PgOrderApiResponse.class);
+
+            if (response == null || response.data() == null) {
+                return List.of();
+            }
+
+            return response.data().transactions().stream()
+                .map(t -> new PgPaymentResponse(t.transactionKey(), t.status(), t.reason()))
+                .toList();
+        } catch (RestClientException e) {
+            log.error("PG 결제 조회 실패. orderId={}", orderId, e);
+            return List.of();
+        }
+    }
+
     private PgPaymentResponse fallback(PgPaymentRequest request, Throwable t) {
         if (t instanceof CallNotPermittedException) {
             log.error("PG 서킷 브레이커 OPEN. request={}", request, t);
@@ -114,5 +137,15 @@ public class PgClientImpl implements PgClient {
         String transactionKey,
         String status,
         String reason
+    ) {}
+
+    private record PgOrderApiResponse(
+        PgMeta meta,
+        PgOrderData data
+    ) {}
+
+    private record PgOrderData(
+        String orderId,
+        List<PgData> transactions
     ) {}
 }
