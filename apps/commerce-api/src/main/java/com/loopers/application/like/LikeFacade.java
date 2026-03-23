@@ -1,5 +1,6 @@
 package com.loopers.application.like;
 
+import com.loopers.domain.like.LikeAction;
 import com.loopers.domain.like.LikedEvent;
 import com.loopers.domain.like.LikeService;
 import com.loopers.domain.like.UnlikedEvent;
@@ -16,13 +17,15 @@ public class LikeFacade {
     private final LikeService likeService;
     private final ApplicationEventPublisher eventPublisher;
 
-    public void toggleLike(Long productId, Long userId) {
+    public LikeAction toggleLike(Long productId, Long userId) {
         if (likeService.isLiked(productId, userId)) {
             likeService.unlike(productId, userId);
             eventPublisher.publishEvent(new UnlikedEvent(productId));
+            return LikeAction.UNLIKED;
         } else {
             likeService.like(productId, userId);
             eventPublisher.publishEvent(new LikedEvent(productId));
+            return LikeAction.LIKED;
         }
     }
 }
