@@ -1,6 +1,7 @@
 package com.loopers.application.payment;
 
 import com.loopers.domain.order.Order;
+import com.loopers.domain.order.OrderConfirmedEvent;
 import com.loopers.domain.order.OrderRepository;
 import com.loopers.domain.payment.Payment;
 import com.loopers.domain.payment.PaymentRepository;
@@ -14,6 +15,7 @@ import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,7 @@ public class PaymentFacade {
     private final PaymentService paymentService;
     private final PaymentRepository paymentRepository;
     private final PgClient pgClient;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${app.callback-url:http://localhost:8080/api/v1/payments/callback}")
     private String callbackUrl;
@@ -85,6 +88,7 @@ public class PaymentFacade {
 
             order.confirm();
             orderRepository.save(order);
+            eventPublisher.publishEvent(new OrderConfirmedEvent(order.getId(), order.getRefUserId()));
 
             log.info("결제 성공. orderId={}, transactionKey={}", command.orderId(), command.transactionKey());
         } else {
