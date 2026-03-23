@@ -6,6 +6,7 @@ import com.loopers.domain.payment.Payment;
 import com.loopers.domain.payment.PgClient;
 import com.loopers.domain.payment.PgPaymentResponse;
 import com.loopers.domain.payment.PaymentRepository;
+import com.loopers.support.error.CoreException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -48,10 +49,16 @@ public class PaymentRecoveryScheduler {
             return;
         }
 
-        List<PgPaymentResponse> pgResponses = pgClient.getPaymentsByOrderId(
-            String.valueOf(order.getRefUserId()),
-            String.valueOf(order.getId())
-        );
+        List<PgPaymentResponse> pgResponses;
+        try {
+            pgResponses = pgClient.getPaymentsByOrderId(
+                String.valueOf(order.getRefUserId()),
+                String.valueOf(order.getId())
+            );
+        } catch (CoreException e) {
+            log.warn("PG 조회 실패로 복구 건너뜀. orderId={}", order.getId());
+            return;
+        }
 
         if (pgResponses.isEmpty()) {
             log.info("PG에 결제 정보 없음. orderId={} → FAILED 처리", order.getId());

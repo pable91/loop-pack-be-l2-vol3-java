@@ -74,6 +74,11 @@ public class PaymentFacade {
 
         Order order = getOrder(command.orderId());
 
+        if (!payment.isPending()) {
+            log.info("이미 처리된 결제 콜백 수신 (멱등 처리). orderId={}, status={}", command.orderId(), payment.getStatus());
+            return PaymentInfo.from(payment, order);
+        }
+
         if (command.isSuccess()) {
             payment.markSuccess(command.transactionKey());
             paymentRepository.save(payment);

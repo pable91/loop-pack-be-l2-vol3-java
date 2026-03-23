@@ -34,6 +34,10 @@ public class Payment {
         return new Payment(id, refOrderId, status, pgTransactionId, failReason, createdAt);
     }
 
+    public boolean isPending() {
+        return this.status == PaymentStatus.PENDING;
+    }
+
     public void markSuccess(String pgTransactionId) {
         if (this.status != PaymentStatus.PENDING) {
             throw new CoreException(ErrorType.BAD_REQUEST, ErrorMessage.Payment.ALREADY_PROCESSED);

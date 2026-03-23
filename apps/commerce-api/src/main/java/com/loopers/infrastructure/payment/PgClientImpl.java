@@ -101,7 +101,7 @@ public class PgClientImpl implements PgClient {
                 .toList();
         } catch (RestClientException e) {
             log.error("PG 결제 조회 실패. orderId={}", orderId, e);
-            return List.of();
+            throw new CoreException(ErrorType.INTERNAL_ERROR, "PG 결제 조회에 실패했습니다.");
         }
     }
 
