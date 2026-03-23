@@ -131,7 +131,70 @@ public void handle(OrderConfirmedEvent event) {
 
 ---
 
-## 7. 전체 흐름 요약
+## 7. 좋아요-집계 이벤트 분리 (Eventual Consistency)
+
+### 파일 구조
+```
+domain/like/LikedEvent.java           ← 집계용 이벤트 (productId)
+domain/like/UnlikedEvent.java         ← 집계용 이벤트 (productId)
+application/like/LikeFacade.java      ← 이벤트 발행 (AFTER_COMMIT 컨텍스트)
+application/like/LikeEventListener   ← 이벤트 수신 + 집계 업데이트
+```
+
+### 왜 "이벤트 분리"가 아닌 "Eventual Consistency"인가
+
+주문-결제는 "이벤트 분리", 좋아요-집계는 "eventual consistency"로 표현하는 이유:
+
+| | 주문-결제 | 좋아요-집계 |
+|---|---|---|
+| 강조 | 책임 분리, 결합도 제거 | 데이터 일관성 트레이드오프 |
+| 핵심 질문 | "쿠폰 실패가 결제에 영향을 줘야 하나?" | "카운트가 잠깐 틀려도 괜찮은가?" |
+| 관점 | 아키텍처 설계 | 데이터 모델 |
+
+집계(count)는 파생 데이터이므로 잠깐 부정확해도 비즈니스적으로 허용 가능 → Eventual Consistency 적용이 합리적.
+
+---
+
+## 8. 유저 행동 로깅 이벤트
+
+### 설계 결정
+
+- **발행 위치**: Controller (행동 추적 목적, 실패 포함해도 OK)
+- **리스너**: `@EventListener` (트랜잭션 불필요, log.info()만)
+- **DB 저장 없음**: 서버 로그에만 기록
+
+### 파일 구조
+```
+domain/product/ProductViewedEvent.java          ← 상품 조회
+domain/like/ProductLikedEvent.java              ← 좋아요 (로깅용, 집계용 LikedEvent와 별개)
+domain/like/ProductUnlikedEvent.java            ← 좋아요 취소 (로깅용)
+domain/order/OrderRequestedEvent.java           ← 주문 요청
+domain/like/LikeAction.java                     ← enum (LIKED, UNLIKED)
+application/logging/UserActionLogListener.java  ← @EventListener 4개
+```
+
+### 핵심 패턴
+```java
+// Controller에서 발행
+LikeAction action = likeFacade.toggleLike(productId, userId);
+if (action == LikeAction.LIKED) {
+    eventPublisher.publishEvent(new ProductLikedEvent(productId, userId));
+} else {
+    eventPublisher.publishEvent(new ProductUnlikedEvent(productId, userId));
+}
+
+// 리스너
+@EventListener
+public void handleProductLiked(ProductLikedEvent event) {
+    log.info("좋아요. productId={}, userId={}", event.getProductId(), event.getUserId());
+}
+```
+
+**주의:** 집계용 `LikedEvent`/`UnlikedEvent`는 Facade에서 발행(AFTER_COMMIT), 로깅용 `ProductLikedEvent`/`ProductUnlikedEvent`는 Controller에서 발행(@EventListener). 목적이 다르므로 이벤트를 분리했다.
+
+---
+
+## 9. 전체 흐름 요약
 
 ```
 1단계: handleCallback() 안에 다 넣기
