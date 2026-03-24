@@ -1,7 +1,11 @@
 package com.loopers.application.product;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.loopers.application.OutboxEventHelper;
 import com.loopers.domain.brand.Brand;
 import com.loopers.domain.brand.BrandService;
+import com.loopers.domain.outbox.OutboxEvent;
+import com.loopers.domain.outbox.OutboxEventRepository;
 import com.loopers.domain.product.CreateProductRequest;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductSearchCondition;
@@ -22,6 +26,8 @@ public class ProductFacade {
     private final BrandService brandService;
     private final ProductService productService;
     private final ProductCacheStore productCacheStore;
+    private final OutboxEventRepository outboxEventRepository;
+    private final ObjectMapper objectMapper;
 
     public List<ProductInfo> createProducts(CreateProductCommand command) {
         command.products().keySet().forEach(brandService::getById);
@@ -42,6 +48,14 @@ public class ProductFacade {
                 return ProductInfo.of(product, brand);
             })
             .toList();
+    }
+
+    public void recordView(Long productId) {
+        outboxEventRepository.save(OutboxEvent.create(
+            "PRODUCT_VIEWED",
+            OutboxEventHelper.toJson(objectMapper, Map.of("productId", productId)),
+            String.valueOf(productId)
+        ));
     }
 
     @Transactional(readOnly = true)
@@ -81,4 +95,5 @@ public class ProductFacade {
                 return list;
             });
     }
+
 }

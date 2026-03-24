@@ -44,6 +44,7 @@ public class ProductV1Controller {
     ) {
         ProductInfo info = productFacade.getProduct(productId);
         eventPublisher.publishEvent(new ProductViewedEvent(productId));
+        productFacade.recordView(productId);
         return ApiResponse.success(ProductV1Dto.ProductDetailResponse.from(info));
     }
 
