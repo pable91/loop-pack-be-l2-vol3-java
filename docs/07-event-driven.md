@@ -194,7 +194,64 @@ public void handleProductLiked(ProductLikedEvent event) {
 
 ---
 
-## 9. 전체 흐름 요약
+## 9. Outbox Pattern이 필요한 이유
+
+### @TransactionalEventListener(AFTER_COMMIT)에서 바로 Kafka로 발행하면 안 되나?
+
+```
+[DB 커밋] ✅
+    ↓
+[AFTER_COMMIT 리스너 실행]
+    ↓
+[kafkaTemplate.send()] ← 여기서 서버가 죽으면 이벤트 소실
+```
+
+확률은 낮지만, **이벤트 종류에 따라 소실 허용 여부가 다르다.**
+
+| 이벤트 | 소실 허용? | 이유 |
+|---|---|---|
+| `ProductViewedEvent` | 허용 가능 | 조회 수 1번 틀려도 비즈니스 영향 없음 |
+| `LikedEvent` / `UnlikedEvent` | 허용 가능 | 집계 수치 약간 틀려도 괜찮음 |
+| `OrderConfirmedEvent` | **허용 불가** | 판매량은 정산/재고와 연결, 소실 불가 |
+
+→ Outbox는 모든 이벤트에 필수가 아니라, **소실이 허용되지 않는 이벤트**에 적용한다.
+→ 이 과제에서는 `OrderConfirmedEvent`가 있으므로 Outbox Pattern이 정당화된다.
+
+---
+
+## 10. 멱등 처리가 필요한 이유
+
+### Kafka는 At Least Once를 보장한다
+
+> "최소 한 번은 전달한다" = 중복 전달될 수 있다
+
+Ack를 받기 전까지 재전송하는 구조이므로, 처리 후 Ack 전송에 실패하면 같은 이벤트가 다시 온다.
+
+```
+Consumer → 처리 완료 → Ack 전송 실패 → Kafka가 재전송 → 중복 처리
+```
+
+→ **Kafka를 쓴다 = 중복 수신을 가정해야 한다**
+
+### acks=all, idempotence=true는 충분하지 않다
+
+Producer 쪽 중복 발행을 막는 설정이다. Consumer 쪽 중복은 애플리케이션 레벨에서 직접 처리해야 한다.
+
+### 해결: event_handled 테이블
+
+```
+이벤트 수신
+    ↓
+event_handled 테이블에 이 이벤트 ID 있나?
+    ├── 있다 → 이미 처리됨, 건너뜀
+    └── 없다 → 처리 후 event_handled에 INSERT
+```
+
+같은 이벤트가 두 번 와도 한 번만 처리되도록 보장한다.
+
+---
+
+## 11. 전체 흐름 요약
 
 ```
 1단계: handleCallback() 안에 다 넣기
