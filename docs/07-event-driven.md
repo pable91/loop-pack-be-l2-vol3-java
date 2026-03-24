@@ -357,7 +357,38 @@ public void relay() {
 
 ---
 
-## 13. 전체 흐름 요약
+## 13. Outbox 저장 로직 구현
+
+### 저장 위치
+
+각 Facade의 기존 트랜잭션 안에서 outbox INSERT한다. 트랜잭션이 롤백되면 outbox도 함께 롤백되므로 이벤트 유실이 없다.
+
+| Facade | 시점 | eventType | partitionKey |
+|---|---|---|---|
+| PaymentFacade.handleCallback() | order.confirm() 직후 | ORDER_CONFIRMED | orderId |
+| LikeFacade.toggleLike() | like/unlike 직후 | LIKED / UNLIKED | productId |
+| ProductFacade.recordView() | 신규 메서드 | PRODUCT_VIEWED | productId |
+
+### payload 직렬화
+
+ObjectMapper를 Facade(application 레이어)에서 직접 사용한다.
+
+직렬화는 기술적으로 인프라 관심사지만, ObjectMapper는 비즈니스 로직이 아니고 Spring이 기본 빈으로 등록해준다. 이를 위해 별도 인터페이스/구현체를 만드는 건 과도한 추상화다.
+
+### OutboxEventHelper
+
+3개 Facade에서 `toJson()` 메서드가 중복되어 `application` 패키지에 static util로 분리했다.
+
+```java
+// application/OutboxEventHelper.java
+public class OutboxEventHelper {
+    public static String toJson(ObjectMapper objectMapper, Object value) { ... }
+}
+```
+
+---
+
+## 14. 전체 흐름 요약
 
 ```
 1단계: handleCallback() 안에 다 넣기
