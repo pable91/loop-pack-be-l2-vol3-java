@@ -251,7 +251,113 @@ event_handled 테이블에 이 이벤트 ID 있나?
 
 ---
 
-## 11. 전체 흐름 요약
+## 11. CDC vs Polling
+
+### Polling (이 과제에서 사용하는 방식)
+
+앱이 주기적으로 DB에 직접 물어보는 방식.
+
+```java
+@Scheduled(fixedDelay = 1000)
+void relay() {
+    List<OutboxEvent> events = outboxRepository.findUnpublished();
+    for (OutboxEvent e : events) {
+        kafkaTemplate.send(...);
+        e.markPublished();
+    }
+}
+```
+
+```
+앱: "새로운 outbox 있어?" (1초마다)
+DB: "응 있어 / 없어"
+```
+
+### CDC (Change Data Capture)
+
+MySQL은 모든 변경사항(INSERT/UPDATE/DELETE)을 **binlog**라는 파일에 순서대로 기록한다. 원래는 복제(replication) 용도다.
+
+CDC는 이 binlog를 **실시간으로 따라가며 읽는** 방식. Debezium 같은 별도 도구가 MySQL에 복제 슬레이브처럼 붙어서 변경사항을 감지 → Kafka로 전달한다.
+
+```
+MySQL binlog → Debezium → Kafka
+               (별도 프로세스가 binlog tail)
+```
+
+```
+DB: "방금 INSERT 됐어!" (즉시)
+Debezium: "알겠어, Kafka에 전달할게"
+```
+
+### 비교
+
+| | Polling | CDC |
+|---|---|---|
+| 구현 주체 | 앱 코드 (@Scheduled) | 외부 도구 (Debezium) |
+| 지연 | 수초 (설정 주기) | 수십ms (실시간) |
+| DB 부하 | SELECT 쿼리 부하 | binlog 읽기 (낮음) |
+| 복잡도 | 낮음 | 높음 (인프라 추가) |
+
+### 왜 이 과제에서는 Polling을 쓰나
+
+CDC는 Debezium 서버 설치/설정/운영이 별도로 필요하다. Outbox + Polling으로도 **"이벤트 소실 없음"** 이라는 핵심 목표는 달성 가능하므로, 복잡도가 낮은 Polling으로 구현한다.
+
+---
+
+## 12. Outbox Pattern 구현
+
+### 파일 구조
+
+```
+domain/outbox/
+  OutboxEvent.java            ← POJO (create/restore factory)
+  OutboxEventRepository.java  ← save, findUnpublished, markPublished
+
+infrastructure/outbox/
+  OutboxEventEntity.java          ← JPA Entity (extends BaseEntity)
+  OutboxEventJpaRepository.java   ← Spring Data JPA
+  OutboxEventRepositoryImpl.java  ← 구현체
+
+application/outbox/
+  OutboxRelayScheduler.java   ← @Scheduled → Kafka 발행
+```
+
+### 발행 완료 처리 방식: publishedAt vs DELETE
+
+두 가지 방식이 있다.
+
+| | publishedAt 업데이트 | 발행 후 DELETE |
+|---|---|---|
+| 구현 | UPDATE SET published_at = now | DELETE |
+| 이력 | 언제 발행됐는지 기록 남음 | 사라짐 |
+| stuck 감지 | published_at IS NULL AND created_at < 5분 전 | created_at만으로 판단 |
+| 테이블 크기 | 계속 쌓임 (별도 정리 필요) | 항상 작음 |
+
+→ **publishedAt 방식 선택**: 발행 이력 추적, stuck 이벤트 감지(발행 실패 알람) 목적
+
+### OutboxEventService 미생성 이유
+
+Outbox는 "이벤트 유실 방지" 인프라 메커니즘이지 비즈니스 로직이 아니다.
+Service를 만들어봤자 Repository 호출만 위임하는 껍데기가 된다.
+
+→ `OutboxRelayScheduler` (application)가 `OutboxEventRepository` (domain 인터페이스)를 직접 사용
+
+### relay 핵심 패턴
+
+```java
+@Scheduled(fixedDelay = 1000)
+public void relay() {
+    List<OutboxEvent> events = outboxEventRepository.findUnpublished();
+    for (OutboxEvent event : events) {
+        kafkaTemplate.send(...);
+        outboxEventRepository.markPublished(event.getId());
+    }
+}
+```
+
+---
+
+## 13. 전체 흐름 요약
 
 ```
 1단계: handleCallback() 안에 다 넣기
