@@ -651,3 +651,86 @@ existsByEventIdAndEventType(eventId, eventType)?
 ```
 
 이 로직은 Step 8의 `ProductMetricsConsumer`에서 실제로 사용된다.
+
+---
+
+## 19. ProductMetrics Consumer 구현
+
+### 파일 구조
+
+```
+apps/commerce-streamer/
+  interfaces/consumer/
+    ProductMetricsConsumer.java    ← Kafka 배치 수신, payload 파싱
+
+  application/metrics/
+    ProductMetricsProcessor.java  ← @Transactional 처리 단위
+
+apps/commerce-api/
+  application/payment/
+    PaymentFacade.java             ← ORDER_CONFIRMED payload에 productIds 추가
+```
+
+### ORDER_CONFIRMED payload 변경
+
+Consumer가 salesCount를 업데이트하려면 productId가 필요하다. 기존 payload에는 orderId/userId만 있었으므로, 주문 아이템의 productIds를 추가했다.
+
+```java
+// PaymentFacade.handleCallback()
+Map.of(
+    "orderId", order.getId(),
+    "userId", order.getRefUserId(),
+    "productIds", order.getItems().stream().map(OrderItem::refProductId).toList()
+)
+```
+
+이벤트는 Consumer가 추가 조회 없이 payload만으로 처리할 수 있어야 한다. Consumer가 orderId로 order_items를 다시 조회하면 모듈 간 결합도가 높아진다.
+
+### 트랜잭션 단위
+
+`ProductMetricsProcessor.process()` 한 번 호출 = 하나의 트랜잭션.
+
+```
+[트랜잭션 시작]
+  1. event_handled 중복 체크
+  2. product_metrics 없으면 생성 (ensureMetricsExists)
+  3. 이벤트 타입에 따라 집계 업데이트
+  4. event_handled INSERT
+[트랜잭션 커밋]
+```
+
+2번과 4번이 같은 트랜잭션에 묶여야 하는 이유: 집계는 성공했는데 event_handled 저장이 실패하면, 다음 중복 이벤트 수신 시 기록이 없으므로 다시 처리되어 집계가 두 번 올라간다.
+
+### eventId 설계
+
+Kafka 메시지는 `(topic, partition, offset)` 조합으로 유일하게 식별된다.
+
+```
+PRODUCT_VIEWED-0-42       ← topic-partition-offset
+```
+
+ORDER_CONFIRMED는 한 메시지에 여러 productId가 있으므로, 같은 eventId로 process()를 여러 번 호출하면 두 번째부터 중복으로 판단해 skip된다. productId를 eventId에 포함시켜 각각을 독립된 처리로 구분한다.
+
+```
+ORDER_CONFIRMED-0-42-100  ← productId 100 처리
+ORDER_CONFIRMED-0-42-200  ← productId 200 처리
+ORDER_CONFIRMED-0-42-300  ← productId 300 처리
+```
+
+### 전체 흐름
+
+```
+Kafka topic 수신 (PRODUCT_VIEWED / LIKED / UNLIKED / ORDER_CONFIRMED)
+    ↓
+ProductMetricsConsumer — 배치 수신, 개별 try-catch
+    ↓
+payload 파싱 (byte[] → Map)
+    ↓
+ORDER_CONFIRMED?
+    ├── yes → productIds 꺼내서 각각 processor.process() 호출
+    └── no  → productId 꺼내서 processor.process() 한 번 호출
+        ↓
+        [트랜잭션] 멱등 체크 → 집계 업데이트 → event_handled 기록
+    ↓
+acknowledgment.acknowledge() — 배치 전체 ACK
+```
