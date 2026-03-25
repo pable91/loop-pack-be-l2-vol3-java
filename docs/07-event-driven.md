@@ -600,3 +600,54 @@ Consumer2: UPDATE SET view_count = view_count + 1  → 12  ← 정확
 ```
 
 이 과제에서는 파티션 1개(기본값)이므로 동시성 문제가 발생하지 않지만, 파티션을 늘릴 때를 대비해 원자적 쿼리를 사용한다.
+
+---
+
+## 18. 멱등 처리 구현: EventHandled
+
+### 역할
+
+같은 이벤트가 두 번 이상 수신됐을 때 중복 처리를 막는 테이블.
+
+Consumer가 메시지를 처리하기 전에 `event_handled` 테이블에서 해당 이벤트 ID를 조회한다. 이미 처리된 기록이 있으면 skip, 없으면 처리 후 기록을 남긴다.
+
+### 파일 구조
+
+```
+domain/event/
+  EventHandled.java            ← 도메인 모델 (eventId, eventType)
+  EventHandledRepository.java  ← existsByEventIdAndEventType, save
+
+infrastructure/event/
+  EventHandledEntity.java          ← JPA Entity (extends BaseEntity)
+  EventHandledJpaRepository.java   ← Spring Data JPA
+  EventHandledRepositoryImpl.java  ← 구현체
+```
+
+### 핵심 설계 결정
+
+**왜 (eventId, eventType) 복합 unique constraint인가?**
+
+같은 eventId라도 eventType이 다르면 서로 다른 Consumer가 다른 목적으로 처리할 수 있다.
+나중에 Consumer Group을 분리할 때도 각 그룹이 독립적으로 멱등 체크를 할 수 있다.
+
+```java
+@UniqueConstraint(name = "uk_event_handled_event_id_type", columnNames = {"event_id", "event_type"})
+```
+
+**왜 event_id에 단독 index도 추가했나?**
+
+`existsByEventIdAndEventType` 쿼리에서 event_id로 먼저 좁혀야 빠르다.
+복합 unique constraint만으로도 쿼리는 되지만, 명시적 index로 의도를 드러냈다.
+
+### Consumer에서 사용하는 흐름
+
+```
+이벤트 수신
+    ↓
+existsByEventIdAndEventType(eventId, eventType)?
+    ├── true  → 이미 처리됨, 건너뜀 (return)
+    └── false → 처리 후 EventHandled.create(eventId, eventType) 저장
+```
+
+이 로직은 Step 8의 `ProductMetricsConsumer`에서 실제로 사용된다.
