@@ -381,6 +381,31 @@ public void relay() {
 }
 ```
 
+### 루프 내 예외 처리 전략
+
+unpublished 이벤트가 여러 개일 때, 하나 실패해도 나머지를 계속 처리하려면 개별 try-catch가 필요하다.
+
+```java
+for (OutboxEvent event : unpublished) {
+    try {
+        kafkaTemplate.send(...);
+        outboxEventRepository.markPublished(event.getId());
+    } catch (Exception e) {
+        log.error("Failed to publish outbox event. id={}", event.getId(), e);
+        // 실패한 건 다음 주기에 재시도
+    }
+}
+```
+
+**선택지 비교:**
+
+| 방식 | 동작 | 사용 상황 |
+|---|---|---|
+| **개별 try-catch** (현재) | 하나 실패해도 나머지 계속 처리 | 각 이벤트가 독립적인 경우 (Outbox relay) |
+| **예외 전파 (try-catch 없음)** | 하나 실패하면 루프 전체 중단, 다음 주기에 처음부터 재시도 | 순서 중요 + 앞 것 실패하면 뒤 것도 의미 없는 경우 (마이그레이션, 데이터 파이프라인) |
+| **Stream + 예외 무시** | 실패를 조용히 넘김 | 일부 누락이 허용되는 경우 (캐시 워밍업, 통계 전처리) |
+| **CompletableFuture (병렬)** | 각 이벤트 독립적으로 비동기 처리 | 순서 보장 불필요 + 처리량이 중요한 경우 (단, Outbox처럼 partitionKey 순서가 필요하면 부적합) |
+
 ---
 
 ## 13. Outbox 저장 로직 구현
@@ -414,7 +439,59 @@ public class OutboxEventHelper {
 
 ---
 
-## 14. 전체 흐름 요약
+## 14. BEFORE_COMMIT vs AFTER_COMMIT 트레이드오프
+
+### 실행 시점
+
+```
+트랜잭션 시작
+  └── 도메인 로직 실행
+      ↓
+  [BEFORE_COMMIT 리스너] ← 아직 트랜잭션 안
+      ↓
+  COMMIT
+      ↓
+  [AFTER_COMMIT 리스너] ← 트랜잭션 밖
+```
+
+### BEFORE_COMMIT에서 외부 시스템(SNS/Kafka) 발행하면?
+
+```
+외부 발행 성공 → 트랜잭션 커밋
+외부 발행 실패 → 트랜잭션 전체 롤백
+```
+
+→ "외부 발행 성공이 도메인 행위의 일부"로 간주하는 것. 외부 시스템 장애가 내 시스템 장애로 전파된다.
+
+### AFTER_COMMIT + Outbox가 필요한 이유
+
+```
+트랜잭션 커밋 ✅
+    ↓
+AFTER_COMMIT → 외부 발행 시도
+  ├── 성공 ✅
+  └── 실패해도 Outbox에 기록 있음 → 배치가 재발행
+```
+
+→ 도메인 행위(DB 저장)와 외부 발행을 분리. 외부 시스템 장애가 내 트랜잭션에 영향을 주지 않는다.
+
+### 비교
+
+| | BEFORE_COMMIT | AFTER_COMMIT + Outbox |
+|---|---|---|
+| 외부 장애 영향 | 내 트랜잭션 롤백 | 없음 |
+| 발행 보장 | 성공해야 커밋됨 | Outbox로 재발행 가능 |
+| 언제 쓰나 | 발행 실패가 곧 도메인 실패인 경우 | 대부분의 경우 |
+
+### 실무 레퍼런스: 배달의민족 회원시스템
+
+배민도 처음엔 BEFORE_COMMIT에서 SNS 발행 → SNS 장애 시 로그인/가입 전체 실패 문제 발생 → AFTER_COMMIT으로 전환 + 이벤트 저장소(= Outbox) 구축.
+
+배민의 "이벤트 저장소(member_event 테이블)"는 Outbox Pattern의 또 다른 구현이다. 이름만 다를 뿐 핵심은 동일: **도메인 트랜잭션 안에서 이벤트를 DB에 저장 → 발행 보장**.
+
+---
+
+## 15. 전체 흐름 요약
 
 ```
 1단계: handleCallback() 안에 다 넣기
@@ -428,4 +505,98 @@ public class OutboxEventHelper {
 
 4단계: Transactional Outbox Pattern
        → 이벤트를 DB에 저장해서 유실 방지 (Kafka와 연결)
+
+5단계: OutboxRelayScheduler
+       → @Scheduled가 미발행 outbox 조회 → Kafka 발행 → markPublished()
 ```
+
+---
+
+## 16. Kafka Topic 설계
+
+### Topic 이름 = eventType
+
+```
+outbox_event.event_type → Kafka topic 이름으로 그대로 사용
+
+PRODUCT_VIEWED   → topic: "PRODUCT_VIEWED"
+LIKED            → topic: "LIKED"
+UNLIKED          → topic: "UNLIKED"
+ORDER_CONFIRMED  → topic: "ORDER_CONFIRMED"
+```
+
+### 왜 eventType별로 topic을 분리하나?
+
+**단일 topic(`commerce.events`)이면:**
+- Consumer가 모든 이벤트를 다 받고 eventType으로 분기해야 함
+- 관심 없는 이벤트도 전부 consume
+
+**eventType별 topic이면:**
+- Consumer가 필요한 topic만 선택해서 구독 가능
+- Consumer Group 분리 시 각 그룹이 관심 있는 topic만 구독
+
+### Consumer Group이란?
+
+같은 topic을 여러 그룹이 독립적으로 읽는 구조.
+
+```
+topic: ORDER_CONFIRMED
+  ├── metrics-group      → sales_count 집계
+  └── notification-group → 주문 완료 알림 발송
+```
+
+두 그룹은 같은 메시지를 각자 독립적으로 처리한다. 같은 그룹 내에서는 파티션을 나눠서 부하 분산.
+
+### Partition Key
+
+```java
+kafkaTemplate.send(event.getEventType(), event.getPartitionKey(), event.getPayload());
+//                 topic                 key(파티션 키)          value
+```
+
+같은 partitionKey를 가진 메시지는 항상 같은 파티션으로 라우팅 → **같은 엔티티에 대한 이벤트 순서 보장**.
+
+예: productId=123인 PRODUCT_VIEWED 이벤트는 항상 같은 파티션 → Consumer가 순서대로 처리.
+```
+
+## 17. Consumer 동시성과 원자적 쿼리
+
+### 파티션 수 = 활성 Consumer 수 상한
+
+Consumer Group 내에서 파티션 수만큼 Consumer 인스턴스가 병렬로 활성화된다.
+
+```
+topic: PRODUCT_VIEWED (파티션 3개)
+  └── metrics-group
+        ├── Consumer1 → 파티션0 처리
+        ├── Consumer2 → 파티션1 처리
+        └── Consumer3 → 파티션2 처리
+```
+
+파티션이 1개면 Consumer도 1개만 활성화된다 (나머지는 대기). 파티션 수는 topic 생성 시 지정한다.
+
+### RMW(Read-Modify-Write) 문제
+
+파티션이 여러 개면 서로 다른 Consumer가 같은 productId 이벤트를 거의 동시에 처리할 수 있다.
+
+```
+Consumer1: read(view_count=10) → +1 → save(11)
+Consumer2: read(view_count=10) → +1 → save(11)  ← 하나 유실
+```
+
+### 해결: 원자적 쿼리
+
+DB가 `SET view_count = view_count + 1`을 한 번에 처리 → 동시 요청도 순차적으로 안전하게 반영된다.
+
+```java
+@Modifying
+@Query("UPDATE ProductMetricsEntity m SET m.viewCount = m.viewCount + 1 WHERE m.productId = :productId")
+void incrementViewCount(@Param("productId") Long productId);
+```
+
+```
+Consumer1: UPDATE SET view_count = view_count + 1  → 11
+Consumer2: UPDATE SET view_count = view_count + 1  → 12  ← 정확
+```
+
+이 과제에서는 파티션 1개(기본값)이므로 동시성 문제가 발생하지 않지만, 파티션을 늘릴 때를 대비해 원자적 쿼리를 사용한다.
