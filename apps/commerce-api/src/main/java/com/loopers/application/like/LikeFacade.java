@@ -30,8 +30,7 @@ public class LikeFacade {
             eventPublisher.publishEvent(new UnlikedEvent(productId));
             outboxEventRepository.save(OutboxEvent.create(
                 "UNLIKED",
-                OutboxEventHelper.toJson(objectMapper, Map.of("productId", productId)),
-                String.valueOf(productId)
+                OutboxEventHelper.toJson(objectMapper, Map.of("productId", productId)), String.valueOf(productId)
             ));
             return LikeAction.UNLIKED;
         } else {
@@ -39,8 +38,7 @@ public class LikeFacade {
             eventPublisher.publishEvent(new LikedEvent(productId));
             outboxEventRepository.save(OutboxEvent.create(
                 "LIKED",
-                OutboxEventHelper.toJson(objectMapper, Map.of("productId", productId)),
-                String.valueOf(productId)
+                OutboxEventHelper.toJson(objectMapper, Map.of("productId", productId)), String.valueOf(productId)
             ));
             return LikeAction.LIKED;
         }
