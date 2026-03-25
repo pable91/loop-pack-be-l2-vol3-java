@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loopers.application.OutboxEventHelper;
 import com.loopers.domain.order.Order;
 import com.loopers.domain.order.OrderConfirmedEvent;
+import com.loopers.domain.order.OrderItem;
 import com.loopers.domain.order.OrderRepository;
 import com.loopers.domain.outbox.OutboxEvent;
 import com.loopers.domain.outbox.OutboxEventRepository;
@@ -98,7 +99,11 @@ public class PaymentFacade {
             eventPublisher.publishEvent(new OrderConfirmedEvent(order.getId(), order.getRefUserId()));
             outboxEventRepository.save(OutboxEvent.create(
                 "ORDER_CONFIRMED",
-                OutboxEventHelper.toJson(objectMapper, Map.of("orderId", order.getId(), "userId", order.getRefUserId())),
+                OutboxEventHelper.toJson(objectMapper, Map.of(
+                    "orderId", order.getId(),
+                    "userId", order.getRefUserId(),
+                    "productIds", order.getItems().stream().map(OrderItem::refProductId).toList()
+                )),
                 String.valueOf(order.getId())
             ));
 
