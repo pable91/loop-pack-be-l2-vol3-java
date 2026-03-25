@@ -40,6 +40,30 @@ eventPublisher.publishEvent(new OrderConfirmedEvent(order.getId()))
 
 쿠폰 발급이 실패해도 결제/주문에 영향이 없다.
 
+### @EventListener의 한계
+
+`ApplicationEvent`로 전환하면 코드 결합도는 낮아진다. 하지만 `@EventListener`는 동기 실행이므로 런타임 결합도는 여전하다.
+
+| | 직접 호출 | `@EventListener` |
+|---|---|---|
+| 코드 결합도 | 높음 (OrderService가 CouponService를 import) | 낮음 (서로 모름) |
+| 런타임 결합도 | 높음 | **여전히 높음** |
+
+리스너에서 예외가 발생하면 발행자 트랜잭션까지 롤백된다.
+
+```
+OrderService.confirm() 트랜잭션 시작
+  → order.confirm()        ✅
+  → publishEvent()
+       → couponService.issue() 💥 예외 발생
+  ← 예외가 confirm()까지 전파
+트랜잭션 롤백 → order.confirm()도 롤백됨
+```
+
+> `@EventListener`는 의존성 방향만 없앤 것. 같은 트랜잭션 안에서 동기 실행된다는 사실은 변하지 않는다.
+
+→ 런타임 결합도를 끊으려면 `@TransactionalEventListener(AFTER_COMMIT)`이 필요하다.
+
 ---
 
 ## 3. 트랜잭션 커밋 타이밍 문제
@@ -97,8 +121,10 @@ public void handle(OrderConfirmedEvent event) {
 
 ### `@EventListener` 사용 상황
 - 트랜잭션이 없는 곳 (앱 시작 이벤트, 캐시 워밍업 등)
-- 리스너가 같은 트랜잭션에 묶여도 되는 경우
-- 의존성을 직접 갖고 싶지 않을 때 (결합도 분리 목적)
+- 리스너가 같은 트랜잭션에 묶여도 되는 경우 (실패 시 함께 롤백되어야 하는 경우)
+- 로깅처럼 실패해도 비즈니스에 영향 없는 경우
+
+> 주의: 코드 결합도는 낮아지지만 런타임 결합도는 여전하다. (섹션 2 참고)
 
 ### 핵심 판단 기준
 > "이 후처리가 DB 트랜잭션 성공에 의존하는가?"
