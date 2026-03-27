@@ -8,13 +8,14 @@ import com.loopers.domain.coupon.CouponIssueRequestRepository;
 import com.loopers.domain.coupon.CouponService;
 import com.loopers.domain.coupon.CouponTemplate;
 import com.loopers.domain.coupon.CouponTemplateService;
+import com.loopers.domain.outbox.OutboxEvent;
+import com.loopers.domain.outbox.OutboxEventRepository;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorMessage;
 import com.loopers.support.error.ErrorType;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,12 +23,10 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CouponFacade {
 
-    private static final String COUPON_ISSUE_TOPIC = "coupon-issue-requests";
-
     private final CouponTemplateService couponTemplateService;
     private final CouponService couponService;
     private final CouponIssueRequestRepository couponIssueRequestRepository;
-    private final KafkaTemplate<Object, Object> kafkaTemplate;
+    private final OutboxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
 
     @Transactional
@@ -85,12 +84,15 @@ public class CouponFacade {
         CouponIssueRequest request = CouponIssueRequest.create(userId, templateId);
         CouponIssueRequest saved = couponIssueRequestRepository.save(request);
 
-        String payload = OutboxEventHelper.toJson(objectMapper, Map.of(
-            "requestId", saved.getId(),
-            "userId", userId,
-            "templateId", templateId
+        outboxEventRepository.save(OutboxEvent.create(
+            "coupon-issue-requests",
+            OutboxEventHelper.toJson(objectMapper, Map.of(
+                "requestId", saved.getId(),
+                "userId", userId,
+                "templateId", templateId
+            )),
+            String.valueOf(templateId)
         ));
-        kafkaTemplate.send(COUPON_ISSUE_TOPIC, String.valueOf(templateId), payload);
 
         return CouponIssueRequestInfo.from(saved);
     }
