@@ -514,33 +514,53 @@ AFTER_COMMIT → 외부 발행 시도
 
 ## 16. Kafka Topic 설계
 
-### Topic 이름 = eventType
+### 도메인별 topic 묶기
 
 ```
-outbox_event.event_type → Kafka topic 이름으로 그대로 사용
+catalog-events  (상품/좋아요 이벤트, key=productId)
+  ├── PRODUCT_VIEWED
+  ├── LIKED
+  └── UNLIKED
 
-PRODUCT_VIEWED   → topic: "PRODUCT_VIEWED"
-LIKED            → topic: "LIKED"
-UNLIKED          → topic: "UNLIKED"
-ORDER_CONFIRMED  → topic: "ORDER_CONFIRMED"
+order-events    (주문/결제 이벤트, key=orderId)
+  └── ORDER_CONFIRMED
+
+coupon-issue-requests  (쿠폰 발급 요청, key=templateId)
 ```
 
-### 왜 eventType별로 topic을 분리하나?
+이벤트 종류는 payload의 `type` 필드로 구분한다.
 
-**단일 topic(`commerce.events`)이면:**
-- Consumer가 모든 이벤트를 다 받고 eventType으로 분기해야 함
-- 관심 없는 이벤트도 전부 consume
+```json
+{ "type": "LIKED", "productId": 123, "occurredAt": "2024-01-01T00:00:00Z" }
+```
 
-**eventType별 topic이면:**
-- Consumer가 필요한 topic만 선택해서 구독 가능
-- Consumer Group 분리 시 각 그룹이 관심 있는 topic만 구독
+### 왜 eventType별 topic이 아닌 도메인별 topic인가
+
+처음에는 `LIKED`, `UNLIKED`, `PRODUCT_VIEWED`를 각각 별도 topic으로 만들었다.
+
+**문제**: PartitionKey로 이벤트 순서를 보장하려면 관련 이벤트들이 **같은 topic** 안에 있어야 한다.
+
+```
+LIKED   topic: productId=5 LIKED   (partition 2)
+UNLIKED topic: productId=5 UNLIKED (partition 0)
+```
+
+같은 productId에 대해 LIKED → UNLIKED 순으로 발행했어도, topic이 다르면 Consumer 처리 순서를 보장할 수 없다. PartitionKey가 있어도 topic이 다르면 의미 없다.
+
+```
+catalog-events topic:
+  partition 2 → productId=5 LIKED
+  partition 2 → productId=5 UNLIKED  ← 같은 partition, 발행 순서 보장
+```
+
+같은 topic + 같은 key → 같은 partition → Consumer가 발행 순서대로 처리된다.
 
 ### Consumer Group이란?
 
 같은 topic을 여러 그룹이 독립적으로 읽는 구조.
 
 ```
-topic: ORDER_CONFIRMED
+topic: order-events
   ├── metrics-group      → sales_count 집계
   └── notification-group → 주문 완료 알림 발송
 ```
@@ -556,8 +576,7 @@ kafkaTemplate.send(event.getEventType(), event.getPartitionKey(), event.getPaylo
 
 같은 partitionKey를 가진 메시지는 항상 같은 파티션으로 라우팅 → **같은 엔티티에 대한 이벤트 순서 보장**.
 
-예: productId=123인 PRODUCT_VIEWED 이벤트는 항상 같은 파티션 → Consumer가 순서대로 처리.
-```
+예: productId=123인 이벤트는 LIKED든 UNLIKED든 `catalog-events`의 같은 파티션 → Consumer가 순서대로 처리.
 
 ## 17. Consumer 동시성과 원자적 쿼리
 
@@ -734,3 +753,173 @@ ORDER_CONFIRMED?
     ↓
 acknowledgment.acknowledge() — 배치 전체 ACK
 ```
+
+---
+
+## 20. 선착순 쿠폰 발급 — 왜 기존 API를 수정하지 않았나
+
+기존 `POST /api/v1/coupons/{couponId}/issue`는 주문 완료 후 시스템이 호출하는 동기 발급이다.
+선착순 발급은 유저가 직접 요청하고, 수량 제한이 있으며, 비동기로 처리된다.
+
+```
+기존 발급: 시스템 → 즉시 쿠폰 반환 (수량 제한 없음)
+선착순 발급: 유저 → requestId 반환 → 나중에 결과 polling
+```
+
+같은 엔드포인트에 두 흐름을 합치면 수량 제한 여부, 동기/비동기 분기가 얽히면서 복잡해진다.
+→ 신규 API로 분리한다.
+
+```
+POST /api/v1/coupons/{templateId}/issue/requests  ← 선착순 발급 요청
+GET  /api/v1/coupon-issue-requests/{requestId}    ← 결과 polling
+```
+
+---
+
+## 21. 동시성 제어 — 왜 Atomic UPDATE인가
+
+선착순 100명 제한을 구현하는 방법은 세 가지다.
+
+**Redis INCR**: 원자적 카운터로 빠르게 선점할 수 있다. 하지만 Redis 카운터와 DB 실제 발급 수량이 두 군데 존재한다. Consumer 실패 시 Redis는 100에 도달했지만 DB는 98개만 저장된 상태가 생길 수 있다.
+
+**Pessimistic Lock**: `SELECT FOR UPDATE`로 템플릿 row를 잠근다. 동시 요청이 몰리면 모든 Consumer가 같은 row 잠금을 기다리며 병목이 생긴다.
+
+**Atomic UPDATE**:
+
+```sql
+UPDATE coupon_templates
+SET issued_count = issued_count + 1
+WHERE id = :templateId
+  AND (max_issuance_count IS NULL OR issued_count < max_issuance_count)
+```
+
+DB가 `issued_count = issued_count + 1`을 원자적으로 처리하므로 경합 없이 안전하다.
+`affected rows = 0`이면 수량 초과다.
+
+Redis와 달리 DB 하나만 진실의 원천이므로 불일치가 없다. Pessimistic Lock과 달리 명시적 잠금이 없어 경합 시에도 성능이 낮지 않다.
+
+---
+
+## 22. 결과 확인 — coupon_issue_requests 테이블
+
+API는 요청을 Kafka에 발행하고 즉시 응답하므로, 발급 성공 여부를 유저에게 바로 알려줄 수 없다.
+→ `coupon_issue_requests` 테이블에 요청 상태를 기록하고 유저가 polling으로 확인한다.
+
+```
+[API]
+  coupon_issue_requests(PENDING) INSERT
+  Kafka 발행
+  → requestId 반환
+
+[Consumer]
+  발급 성공 → SUCCESS 업데이트
+  수량 초과 → FAILED + failReason 업데이트
+  중복 발급 → FAILED + failReason 업데이트
+
+[유저]
+  GET /api/v1/coupon-issue-requests/{requestId}
+  → PENDING / SUCCESS / FAILED 확인
+```
+
+`commerce-api`와 `commerce-streamer`는 DB를 공유하므로 같은 테이블에 각자의 역할로 접근한다.
+각 앱이 독립적인 Entity 클래스를 정의하고 같은 테이블을 바라보는 구조다.
+
+---
+
+## 23. 실패 처리 — REQUIRES_NEW가 필요한 이유
+
+`process()`가 예외를 던지면 트랜잭션이 롤백된다. 같은 트랜잭션 안에서 FAILED 업데이트를 시도해도 함께 롤백되어 유저는 영영 PENDING 상태만 보게 된다.
+
+```
+[트랜잭션]
+  issued_count 증가
+  coupons INSERT
+  💥 예외 발생 → 롤백
+  coupon_issue_requests FAILED 업데이트 ← 이것도 롤백됨
+```
+
+→ `markFailed()`를 `REQUIRES_NEW`로 분리해 원래 트랜잭션 롤백과 무관하게 커밋한다.
+
+```java
+@Transactional
+public void process(...) {
+    // 실패 시 예외 throw → 롤백
+}
+
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+public void markFailed(Long requestId, String reason) {
+    // 새 트랜잭션 → 롤백과 무관하게 FAILED 커밋
+}
+```
+
+Consumer에서 예외 종류에 따라 다르게 처리한다.
+
+```java
+} catch (CouponIssueException e) {
+    processor.markFailed(requestId, e.getMessage());
+    // 비즈니스 실패 (수량 초과, 중복 등) → 재시도해도 의미 없으므로 rethrow 안 함
+} catch (Exception e) {
+    processor.markFailed(requestId, "발급 처리 중 오류가 발생했습니다.");
+    throw e; // 시스템 오류 → Kafka가 재처리할 수 있도록 rethrow
+}
+```
+
+> `@TransactionalEventListener`에서 `REQUIRES_NEW`가 필요한 이유(섹션 6)와 같은 맥락이다. 원래 트랜잭션이 끝난 상황에서 새 DB 작업이 필요할 때 `REQUIRES_NEW`를 연다.
+
+---
+
+## 24. 이벤트 핸들링 테이블과 로그 테이블을 왜 분리하나
+
+`event_handled`는 두 가지를 막는다.
+
+| 체크 | 목적 | 키 |
+|---|---|---|
+| `eventId + eventType` | 동일 Kafka 메시지 재수신 방지 | topic-partition-offset |
+| `entityId + eventType + occurredAt` | 오래된 이벤트(stale) 반영 방지 | 도메인 엔티티 ID + 발생 시각 |
+
+두 체크를 하나의 테이블에서 하는 이유는 "이미 처리한 이벤트 목록"이라는 목적이 같기 때문이다.
+
+**로그 테이블과 다른 점:**
+
+로그 테이블은 감사(Audit) 목적이다. 어떤 이벤트가 언제 처리됐는지 이력을 남기는 역할이므로, 삭제하면 안 되고 조회 성능보다 완전한 기록이 중요하다.
+
+`event_handled`는 처리 가드 목적이다. "이미 처리했나?"를 빠르게 확인하기 위해 index가 중요하고, 오래된 레코드는 정리해도 된다.
+
+→ 역할이 다르므로 테이블을 분리한다. 하나로 합치면 index 설계, 보존 정책, 조회 패턴이 충돌한다.
+
+---
+
+## 25. Stale 이벤트 필터링 — 왜 eventId 중복 체크만으로 부족한가
+
+### eventId 중복 체크로 막는 것
+
+`eventId = topic-partition-offset`은 Kafka 메시지마다 유일하다. **같은 Kafka 메시지가 두 번 수신**됐을 때 중복 처리를 막는다.
+
+### eventId 중복 체크로 막지 못하는 것
+
+Outbox Pattern은 At Least Once 발행을 보장한다. 즉, **같은 논리적 이벤트가 두 개의 다른 Kafka 메시지로 발행될 수 있다.**
+
+예: Outbox relay 버그로 LIKED 이벤트가 두 번 발행되면 두 메시지는 offset이 달라 eventId가 다르다. eventId 체크로는 걸러지지 않는다.
+
+### 해결: occurredAt 기반 stale 체크
+
+이벤트 발생 시각(`occurredAt`)을 payload에 포함하고, `event_handled`에 기록한다.
+
+```
+이벤트 수신 (entityId=5, eventType=LIKED, occurredAt=t=10)
+    ↓
+event_handled에 (entityId=5, LIKED, occurredAt≥t=10) 인 레코드 있나?
+    ├── 있다 → 이미 더 최신 이벤트가 처리됨, 이 이벤트는 stale → skip
+    └── 없다 → 처리 후 (eventId, eventType, entityId, occurredAt) 기록
+```
+
+같은 논리적 이벤트가 늦게 도착해도 이미 최신 상태가 반영됐다면 무시된다.
+
+### 두 체크의 역할 분리
+
+```
+eventId 중복 체크    → "이 Kafka 메시지를 처리한 적 있나?" (네트워크 레벨 중복)
+occurredAt stale 체크 → "이 엔티티에 더 최신 이벤트가 이미 반영됐나?" (논리적 중복)
+```
+
+두 체크는 서로 다른 문제를 막으므로 둘 다 필요하다.
