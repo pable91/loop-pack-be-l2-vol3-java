@@ -3,6 +3,7 @@ package com.loopers.application.product;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loopers.application.OutboxEventHelper;
 import com.loopers.domain.brand.Brand;
+import java.time.ZonedDateTime;
 import com.loopers.domain.brand.BrandService;
 import com.loopers.domain.outbox.OutboxEvent;
 import com.loopers.domain.outbox.OutboxEventRepository;
@@ -52,8 +53,8 @@ public class ProductFacade {
 
     public void recordView(Long productId) {
         outboxEventRepository.save(OutboxEvent.create(
-            "PRODUCT_VIEWED",
-            OutboxEventHelper.toJson(objectMapper, Map.of("productId", productId)),
+            "catalog-events",
+            OutboxEventHelper.toJson(objectMapper, Map.of("type", "PRODUCT_VIEWED", "productId", productId, "occurredAt", ZonedDateTime.now().toString())),
             String.valueOf(productId)
         ));
     }

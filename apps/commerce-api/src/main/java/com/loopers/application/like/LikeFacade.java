@@ -8,6 +8,7 @@ import com.loopers.domain.like.LikeService;
 import com.loopers.domain.like.UnlikedEvent;
 import com.loopers.domain.outbox.OutboxEvent;
 import com.loopers.domain.outbox.OutboxEventRepository;
+import java.time.ZonedDateTime;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -29,16 +30,18 @@ public class LikeFacade {
             likeService.unlike(productId, userId);
             eventPublisher.publishEvent(new UnlikedEvent(productId));
             outboxEventRepository.save(OutboxEvent.create(
-                "UNLIKED",
-                OutboxEventHelper.toJson(objectMapper, Map.of("productId", productId)), String.valueOf(productId)
+                "catalog-events",
+                OutboxEventHelper.toJson(objectMapper, Map.of("type", "UNLIKED", "productId", productId, "occurredAt", ZonedDateTime.now().toString())),
+                String.valueOf(productId)
             ));
             return LikeAction.UNLIKED;
         } else {
             likeService.like(productId, userId);
             eventPublisher.publishEvent(new LikedEvent(productId));
             outboxEventRepository.save(OutboxEvent.create(
-                "LIKED",
-                OutboxEventHelper.toJson(objectMapper, Map.of("productId", productId)), String.valueOf(productId)
+                "catalog-events",
+                OutboxEventHelper.toJson(objectMapper, Map.of("type", "LIKED", "productId", productId, "occurredAt", ZonedDateTime.now().toString())),
+                String.valueOf(productId)
             ));
             return LikeAction.LIKED;
         }

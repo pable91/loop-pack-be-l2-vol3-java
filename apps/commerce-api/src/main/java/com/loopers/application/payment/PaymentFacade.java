@@ -3,6 +3,7 @@ package com.loopers.application.payment;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loopers.application.OutboxEventHelper;
 import com.loopers.domain.order.Order;
+import java.time.ZonedDateTime;
 import com.loopers.domain.order.OrderConfirmedEvent;
 import com.loopers.domain.order.OrderItem;
 import com.loopers.domain.order.OrderRepository;
@@ -98,11 +99,13 @@ public class PaymentFacade {
             orderRepository.save(order);
             eventPublisher.publishEvent(new OrderConfirmedEvent(order.getId(), order.getRefUserId()));
             outboxEventRepository.save(OutboxEvent.create(
-                "ORDER_CONFIRMED",
+                "order-events",
                 OutboxEventHelper.toJson(objectMapper, Map.of(
+                    "type", "ORDER_CONFIRMED",
                     "orderId", order.getId(),
                     "userId", order.getRefUserId(),
-                    "productIds", order.getItems().stream().map(OrderItem::refProductId).toList()
+                    "productIds", order.getItems().stream().map(OrderItem::refProductId).toList(),
+                    "occurredAt", ZonedDateTime.now().toString()
                 )),
                 String.valueOf(order.getId())
             ));
