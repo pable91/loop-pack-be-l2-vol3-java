@@ -4,6 +4,7 @@ import com.loopers.domain.queue.EntryToken;
 import com.loopers.domain.queue.EntryTokenRepository;
 import java.time.Duration;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -11,17 +12,21 @@ import org.springframework.stereotype.Component;
 public class EntryTokenRedisStore implements EntryTokenRepository {
 
     static final String KEY_PREFIX = "entry-token:";
-    static final Duration TTL = Duration.ofMinutes(5);
 
     private final RedisTemplate<String, String> redisTemplate;
+    private final Duration ttl;
 
-    public EntryTokenRedisStore(RedisTemplate<String, String> redisTemplate) {
+    public EntryTokenRedisStore(
+            RedisTemplate<String, String> redisTemplate,
+            @Value("${entry-token.ttl-seconds}") long ttlSeconds
+    ) {
         this.redisTemplate = redisTemplate;
+        this.ttl = Duration.ofSeconds(ttlSeconds);
     }
 
     @Override
     public void save(EntryToken token) {
-        redisTemplate.opsForValue().set(key(token.getUserId()), token.getToken(), TTL);
+        redisTemplate.opsForValue().set(key(token.getUserId()), token.getToken(), ttl);
     }
 
     @Override
