@@ -22,11 +22,15 @@ public class QueueScheduler {
 
     @Scheduled(fixedDelay = 100)
     public void issueTokens() {
-        List<Long> userIds = waitingQueueRepository.popFront(BATCH_SIZE);
-        for (Long userId : userIds) {
-            EntryToken token = EntryToken.issue(userId);
-            entryTokenRepository.save(token);
-            log.debug("Entry token issued. userId={}", userId);
+        try {
+            List<Long> userIds = waitingQueueRepository.popFront(BATCH_SIZE);
+            for (Long userId : userIds) {
+                EntryToken token = EntryToken.issue(userId);
+                entryTokenRepository.save(token);
+                log.debug("Entry token issued. userId={}", userId);
+            }
+        } catch (Exception e) {
+            log.error("Failed to issue entry tokens. Skipping batch.", e);
         }
     }
 }
