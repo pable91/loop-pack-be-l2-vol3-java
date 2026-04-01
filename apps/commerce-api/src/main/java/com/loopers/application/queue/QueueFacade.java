@@ -31,7 +31,9 @@ public class QueueFacade {
     public QueueInfo getPosition(Long userId) {
         long position = waitingQueueRepository.getPosition(userId);
         if (position == -1L) {
-            throw new CoreException(ErrorType.NOT_FOUND, ErrorMessage.Queue.NOT_IN_QUEUE);
+            return entryTokenRepository.findByUserId(userId)
+                .map(token -> QueueInfo.admitted(token.getToken()))
+                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, ErrorMessage.Queue.NOT_IN_QUEUE));
         }
         long totalWaiting = waitingQueueRepository.getSize();
         WaitingQueue queue = WaitingQueue.of(userId, position, totalWaiting);
