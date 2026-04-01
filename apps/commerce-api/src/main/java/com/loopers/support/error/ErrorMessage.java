@@ -161,6 +161,7 @@ public final class ErrorMessage {
 
         public static final String USER_ID_INVALID = "유저FK는 null이거나 0이하가 될 수 없습니다";
         public static final String INVALID_ENTRY_TOKEN = "유효하지 않은 입장 토큰입니다";
+        public static final String NOT_IN_QUEUE = "대기열에 존재하지 않는 유저입니다";
     }
 
     /**

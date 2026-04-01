@@ -6,6 +6,7 @@ import com.loopers.application.user.AuthUserPrincipal;
 import com.loopers.interfaces.api.ApiResponse;
 import com.loopers.interfaces.api.AuthUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,5 +22,11 @@ public class QueueV1Controller {
     public ApiResponse<QueueV1Dto.EnterResponse> enter(@AuthUser AuthUserPrincipal user) {
         QueueInfo info = queueFacade.enter(user.getId());
         return ApiResponse.success(QueueV1Dto.EnterResponse.from(info));
+    }
+
+    @GetMapping("/position")
+    public ApiResponse<QueueV1Dto.PositionResponse> getPosition(@AuthUser AuthUserPrincipal user) {
+        QueueInfo info = queueFacade.getPosition(user.getId());
+        return ApiResponse.success(QueueV1Dto.PositionResponse.from(info));
     }
 }

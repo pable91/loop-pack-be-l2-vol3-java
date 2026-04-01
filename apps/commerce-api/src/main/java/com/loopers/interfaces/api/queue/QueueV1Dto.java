@@ -13,4 +13,14 @@ public class QueueV1Dto {
             );
         }
     }
+
+    public record PositionResponse(long position, long totalWaiting, long estimatedWaitSeconds) {
+        public static PositionResponse from(QueueInfo info) {
+            return new PositionResponse(
+                info.position(),
+                info.totalWaiting(),
+                info.estimatedWaitSeconds()
+            );
+        }
+    }
 }
