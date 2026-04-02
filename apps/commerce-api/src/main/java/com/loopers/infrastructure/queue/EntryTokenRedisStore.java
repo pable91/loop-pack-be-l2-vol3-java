@@ -5,7 +5,10 @@ import com.loopers.domain.queue.EntryTokenRepository;
 import java.time.Duration;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -41,6 +44,25 @@ public class EntryTokenRedisStore implements EntryTokenRepository {
     @Override
     public void deleteByUserId(Long userId) {
         redisTemplate.delete(key(userId));
+    }
+
+    @Override
+    public long countActive() {
+        Long count = redisTemplate.execute((RedisCallback<Long>) connection -> {
+            long result = 0L;
+            ScanOptions options = ScanOptions.scanOptions()
+                .match(KEY_PREFIX + "*")
+                .count(100)
+                .build();
+            try (Cursor<byte[]> cursor = connection.scan(options)) {
+                while (cursor.hasNext()) {
+                    cursor.next();
+                    result++;
+                }
+            }
+            return result;
+        });
+        return count != null ? count : 0L;
     }
 
     private String key(Long userId) {

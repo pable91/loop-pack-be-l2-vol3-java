@@ -9,4 +9,6 @@ public interface EntryTokenRepository {
     Optional<EntryToken> findByUserId(Long userId);
 
     void deleteByUserId(Long userId);
+
+    long countActive();
 }
