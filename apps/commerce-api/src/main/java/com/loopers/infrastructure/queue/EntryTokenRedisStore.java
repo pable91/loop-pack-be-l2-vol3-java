@@ -59,6 +59,8 @@ public class EntryTokenRedisStore implements EntryTokenRepository {
                     cursor.next();
                     result++;
                 }
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to count active tokens", e);
             }
             return result;
         });

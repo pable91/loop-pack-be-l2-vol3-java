@@ -8,8 +8,12 @@ import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorMessage;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.QueryTimeoutException;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class QueueFacade {
@@ -22,30 +26,47 @@ public class QueueFacade {
     private final EntryTokenRepository entryTokenRepository;
 
     public QueueInfo enter(Long userId) {
-        long position = waitingQueueRepository.enter(userId);
-        long totalWaiting = waitingQueueRepository.getSize();
-        WaitingQueue queue = WaitingQueue.of(userId, position, totalWaiting);
-        return QueueInfo.from(queue, TPS);
+        try {
+            long position = waitingQueueRepository.enter(userId);
+            long totalWaiting = waitingQueueRepository.getSize();
+            WaitingQueue queue = WaitingQueue.of(userId, position, totalWaiting);
+            return QueueInfo.from(queue, TPS);
+        } catch (RedisConnectionFailureException | QueryTimeoutException e) {
+            log.error("Redis unavailable on queue enter. userId={}", userId, e);
+            throw new CoreException(ErrorType.SERVICE_UNAVAILABLE, ErrorMessage.Queue.QUEUE_UNAVAILABLE);
+        }
     }
 
     public QueueInfo getPosition(Long userId) {
-        long position = waitingQueueRepository.getPosition(userId);
-        if (position == -1L) {
-            return entryTokenRepository.findByUserId(userId)
-                .map(token -> QueueInfo.admitted(token.getToken()))
-                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, ErrorMessage.Queue.NOT_IN_QUEUE));
+        try {
+            long position = waitingQueueRepository.getPosition(userId);
+            if (position == -1L) {
+                return entryTokenRepository.findByUserId(userId)
+                    .map(token -> QueueInfo.admitted(token.getToken()))
+                    .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, ErrorMessage.Queue.NOT_IN_QUEUE));
+            }
+            long totalWaiting = waitingQueueRepository.getSize();
+            WaitingQueue queue = WaitingQueue.of(userId, position, totalWaiting);
+            return QueueInfo.from(queue, TPS);
+        } catch (RedisConnectionFailureException | QueryTimeoutException e) {
+            log.error("Redis unavailable on getPosition. userId={}", userId, e);
+            throw new CoreException(ErrorType.SERVICE_UNAVAILABLE, ErrorMessage.Queue.QUEUE_UNAVAILABLE);
         }
-        long totalWaiting = waitingQueueRepository.getSize();
-        WaitingQueue queue = WaitingQueue.of(userId, position, totalWaiting);
-        return QueueInfo.from(queue, TPS);
     }
 
     public void validateAndConsumeToken(Long userId, String token) {
-        EntryToken entryToken = entryTokenRepository.findByUserId(userId)
-            .orElseThrow(() -> new CoreException(ErrorType.FORBIDDEN, ErrorMessage.Queue.INVALID_ENTRY_TOKEN));
-        if (!entryToken.getToken().equals(token)) {
-            throw new CoreException(ErrorType.FORBIDDEN, ErrorMessage.Queue.INVALID_ENTRY_TOKEN);
+        try {
+            EntryToken entryToken = entryTokenRepository.findByUserId(userId)
+                .orElseThrow(() -> new CoreException(ErrorType.FORBIDDEN, ErrorMessage.Queue.INVALID_ENTRY_TOKEN));
+            if (!entryToken.getToken().equals(token)) {
+                throw new CoreException(ErrorType.FORBIDDEN, ErrorMessage.Queue.INVALID_ENTRY_TOKEN);
+            }
+            entryTokenRepository.deleteByUserId(userId);
+        } catch (CoreException e) {
+            throw e;
+        } catch (RedisConnectionFailureException | QueryTimeoutException e) {
+            log.error("Redis unavailable on validateAndConsumeToken. userId={}", userId, e);
+            throw new CoreException(ErrorType.SERVICE_UNAVAILABLE, ErrorMessage.Queue.QUEUE_UNAVAILABLE);
         }
-        entryTokenRepository.deleteByUserId(userId);
     }
 }
